@@ -1,0 +1,18 @@
+# Set the default behavior, in case users don't have core.autocrlf set.
+* text=auto
+
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout.
+*.java text
+*.kt text
+*.xml text
+*.gradle text
+*.md text
+*.txt text
+
+# Denote all the binary files that should never be converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
