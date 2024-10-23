@@ -9,6 +9,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.atm_osphere.viewmodels.AuthViewModel
 import com.example.atm_osphere.viewmodels.AuthViewModelFactory
+import com.example.atm_osphere.viewmodels.TransactionViewModelFactory
 import com.example.atm_osphere.utils.UserDatabaseHelper
 import com.example.atm_osphere.viewmodels.TransactionViewModel
 import com.example.atm_osphere.utils.TransactionDatabaseHelper
@@ -67,11 +68,14 @@ fun NavigationSetup(
         ) { backStackEntry ->
             val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             val puid = backStackEntry.arguments?.getString("puid") ?: ""
-
-            // Instantiate TransactionViewModel (or use ViewModelFactory if needed)
-            val transactionDatabaseHelper = TransactionDatabaseHelper(context = navController.context) // Ensure you pass the context
-            val passphrase = "your-secure-passphrase".toCharArray()  // Replace with your actual passphrase
-            val transactionViewModel = TransactionViewModel(transactionDatabaseHelper, passphrase)
+            val context = navController.context
+            // Create TransactionViewModel using TransactionViewModelFactory
+            val transactionViewModel: TransactionViewModel = viewModel(
+                factory = TransactionViewModelFactory(
+                    TransactionDatabaseHelper(context),
+                    "your-secure-passphrase".toCharArray()
+                )
+            )
 
             // Pass the viewModel to MainPage
             MainPage(navController = navController, sessionId = sessionId, puid = puid, viewModel = transactionViewModel)
