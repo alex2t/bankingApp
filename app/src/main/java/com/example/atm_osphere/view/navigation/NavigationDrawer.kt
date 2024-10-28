@@ -1,4 +1,4 @@
-package com.example.atm_osphere.view
+package com.example.atm_osphere.view.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.atm_osphere.viewmodels.AuthViewModel
+import com.example.atm_osphere.viewmodels.auth.AuthViewModel
 
 @Composable
 fun DrawerContent(

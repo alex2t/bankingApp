@@ -1,11 +1,14 @@
-package com.example.atm_osphere.utils
+package com.example.atm_osphere.utils.database
 
 import android.content.Context
 import android.database.Cursor
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import net.sqlcipher.database.SQLiteDatabase
-import net.sqlcipher.database.SQLiteOpenHelper
 import com.example.atm_osphere.model.User
+import com.example.atm_osphere.utils.workers.UserDatabaseWorker
+import net.sqlcipher.database.SQLiteOpenHelper
 
 class UserDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -73,14 +76,14 @@ class UserDatabaseHelper(private val context: Context) : SQLiteOpenHelper(contex
 
     // Use WorkManager to insert user in the background
     fun insertUserInBackground(user: User, passphrase: String) {
-        val inputData = androidx.work.Data.Builder()
+        val inputData = Data.Builder()
             .putString("userId", user.permanentUserId)
             .putString("email", user.email)
             .putString("password", user.password)
             .putString("passphrase", passphrase)
             .build()
 
-        val workRequest = androidx.work.OneTimeWorkRequestBuilder<UserDatabaseWorker>()
+        val workRequest = OneTimeWorkRequestBuilder<UserDatabaseWorker>()
             .setInputData(inputData)
             .build()
 

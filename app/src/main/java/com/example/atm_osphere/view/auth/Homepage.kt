@@ -1,4 +1,4 @@
-package com.example.atm_osphere.view
+package com.example.atm_osphere.view.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button

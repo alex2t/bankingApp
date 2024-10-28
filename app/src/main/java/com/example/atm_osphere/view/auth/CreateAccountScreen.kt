@@ -1,39 +1,31 @@
-package com.example.atm_osphere.view
+package com.example.atm_osphere.view.auth
 
-import com.example.atm_osphere.viewmodels.AuthViewModel
+import com.example.atm_osphere.viewmodels.auth.AuthViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.Alignment
-import androidx.navigation.NavController
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import android.util.Log
-
-
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.runtime.saveable.rememberSaveable
 
 @Composable
-fun SignInScreen(viewModel: AuthViewModel, navController: NavController, sessionId: String) {
+fun CreateAccountScreen(viewModel: AuthViewModel, navController: NavController, sessionId: String) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
-    val statusMessage by viewModel.statusMessage.collectAsState()
-    val puid by viewModel.puid.collectAsState()
-
-    // When PUID is available, navigate to the main page
-    LaunchedEffect(puid) {
-        if (puid != null && puid!!.isNotBlank()) {
-            navController.navigate("mainpage/$sessionId/$puid") {
-                popUpTo("home") { inclusive = true }
-            }
-        }
+    LaunchedEffect(Unit) {
+        viewModel.clearStatusMessage()
     }
+
+    val statusMessage by viewModel.statusMessage.collectAsState()
+
+    var isProcessing by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -65,13 +57,18 @@ fun SignInScreen(viewModel: AuthViewModel, navController: NavController, session
         Button(
             onClick = {
                 focusManager.clearFocus()
-                if (email.isNotBlank() && password.isNotBlank()) {
-                    viewModel.signIn(email, password)
+                if (email.isNotBlank() && password.isNotBlank() && !isProcessing) {
+                    isProcessing = true
+                    viewModel.createAccount(email, password)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = email.isNotBlank() && password.isNotBlank()
+            enabled = email.isNotBlank() && password.isNotBlank() && !isProcessing
         ) {
+            Text("Create Account")
+        }
+
+        TextButton(onClick = { navController.navigate("signIn/$sessionId") }) {
             Text("Sign In")
         }
 

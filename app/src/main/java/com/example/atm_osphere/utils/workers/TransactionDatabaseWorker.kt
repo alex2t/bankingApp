@@ -1,9 +1,10 @@
-package com.example.atm_osphere.utils
+package com.example.atm_osphere.utils.workers
 
 import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.example.atm_osphere.model.Transaction
+import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
 
 class TransactionDatabaseWorker(
     context: Context,

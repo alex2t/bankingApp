@@ -1,8 +1,8 @@
-package com.example.atm_osphere.viewmodels
+package com.example.atm_osphere.viewmodels.transaction
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.atm_osphere.utils.TransactionDatabaseHelper
+import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
 
 class TransactionViewModelFactory(
     private val databaseHelper: TransactionDatabaseHelper,

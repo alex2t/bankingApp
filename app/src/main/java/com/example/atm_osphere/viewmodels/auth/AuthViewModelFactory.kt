@@ -1,8 +1,8 @@
-package com.example.atm_osphere.viewmodels
+package com.example.atm_osphere.viewmodels.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.atm_osphere.utils.UserDatabaseHelper
+import com.example.atm_osphere.utils.database.UserDatabaseHelper
 
 
 class AuthViewModelFactory(

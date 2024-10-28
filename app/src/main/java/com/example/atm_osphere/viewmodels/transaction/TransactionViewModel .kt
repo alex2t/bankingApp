@@ -1,11 +1,9 @@
-package com.example.atm_osphere.viewmodels
+package com.example.atm_osphere.viewmodels.transaction
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.atm_osphere.model.Transaction
-import com.example.atm_osphere.utils.TransactionDatabaseHelper
+import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

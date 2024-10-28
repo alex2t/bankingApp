@@ -1,4 +1,4 @@
-package com.example.atm_osphere.view
+package com.example.atm_osphere.view.postLogin
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,9 +10,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.atm_osphere.viewmodels.TransactionViewModel
-import com.example.atm_osphere.viewmodels.AuthViewModel
+import com.example.atm_osphere.viewmodels.transaction.TransactionViewModel
+import com.example.atm_osphere.viewmodels.auth.AuthViewModel
 import com.example.atm_osphere.model.Transaction
+import com.example.atm_osphere.view.navigation.BasePage
+import com.example.atm_osphere.view.navigation.DrawerContent
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -65,6 +67,7 @@ fun MainPage(
                         isLoading -> {
                             CircularProgressIndicator(modifier = Modifier.padding(16.dp))
                         }
+
                         transactions.isNotEmpty() -> {
                             LazyColumn(
                                 modifier = Modifier
@@ -76,6 +79,7 @@ fun MainPage(
                                 }
                             }
                         }
+
                         else -> {
                             Text("No transactions found", modifier = Modifier.padding(16.dp))
                         }

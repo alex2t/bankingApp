@@ -1,20 +1,22 @@
-package com.example.atm_osphere.view
+package com.example.atm_osphere.view.navigation
 
 import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.compose.runtime.collectAsState
-import com.example.atm_osphere.viewmodels.AuthViewModel
-import com.example.atm_osphere.viewmodels.AuthViewModelFactory
-import com.example.atm_osphere.viewmodels.TransactionViewModelFactory
-import com.example.atm_osphere.utils.UserDatabaseHelper
-import com.example.atm_osphere.viewmodels.TransactionViewModel
-import com.example.atm_osphere.utils.TransactionDatabaseHelper
+import com.example.atm_osphere.viewmodels.auth.AuthViewModel
+import com.example.atm_osphere.viewmodels.transaction.TransactionViewModelFactory
+import com.example.atm_osphere.viewmodels.transaction.TransactionViewModel
+import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
 import androidx.lifecycle.viewmodel.compose.viewModel
-
+import com.example.atm_osphere.view.postLogin.AddPayee
+import com.example.atm_osphere.view.auth.CreateAccountScreen
+import com.example.atm_osphere.view.auth.HomePage
+import com.example.atm_osphere.view.postLogin.MainPage
+import com.example.atm_osphere.view.auth.SignInScreen
+import com.example.atm_osphere.view.postLogin.TransactionPage
 
 
 @Composable
@@ -24,7 +26,6 @@ fun NavigationSetup(
     authViewModel: AuthViewModel
 ) {
     val context = navController.context
-
 
     val loggedInState = authViewModel.loggedIn.collectAsState(initial = false)
     val loggedIn = loggedInState.value
@@ -49,12 +50,20 @@ fun NavigationSetup(
 
         composable("signIn/{sessionId}") { backStackEntry ->
             val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
-            SignInScreen(viewModel = authViewModel, navController = navController, sessionId = sessionId)
+            SignInScreen(
+                viewModel = authViewModel,
+                navController = navController,
+                sessionId = sessionId
+            )
         }
 
         composable("createAccount/{sessionId}") { backStackEntry ->
             val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
-            CreateAccountScreen(viewModel = authViewModel, navController = navController, sessionId = sessionId)
+            CreateAccountScreen(
+                viewModel = authViewModel,
+                navController = navController,
+                sessionId = sessionId
+            )
         }
 
         composable("mainpage/{sessionId}/{puid}") { backStackEntry ->

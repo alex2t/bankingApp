@@ -1,4 +1,4 @@
-package com.example.atm_osphere.view
+package com.example.atm_osphere.view.postLogin
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +12,9 @@ import androidx.navigation.NavHostController
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Arrangement
-import com.example.atm_osphere.viewmodels.AuthViewModel
+import com.example.atm_osphere.view.navigation.BasePage
+import com.example.atm_osphere.view.navigation.DrawerContent
+import com.example.atm_osphere.viewmodels.auth.AuthViewModel
 
 
 
@@ -27,7 +29,12 @@ fun AddPayee(
         navController = navController,
         pageTitle = "Add Payee Page",
         drawerContent = {
-            DrawerContent(navController = navController, sessionId = sessionId, puid = puid, authViewModel = authViewModel)
+            DrawerContent(
+                navController = navController,
+                sessionId = sessionId,
+                puid = puid,
+                authViewModel = authViewModel
+            )
         },
         content = { paddingValues ->
             Box(

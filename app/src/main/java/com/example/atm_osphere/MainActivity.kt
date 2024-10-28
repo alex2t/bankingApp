@@ -7,12 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
-import com.example.atm_osphere.view.NavigationSetup
-import com.example.atm_osphere.viewmodels.AuthViewModel
-import com.example.atm_osphere.viewmodels.AuthViewModelFactory
-import com.example.atm_osphere.utils.UserDatabaseHelper
+import com.example.atm_osphere.view.navigation.NavigationSetup
+import com.example.atm_osphere.viewmodels.auth.AuthViewModel
+import com.example.atm_osphere.viewmodels.auth.AuthViewModelFactory
+import com.example.atm_osphere.utils.database.UserDatabaseHelper
 import java.util.UUID
-import android.util.Log
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

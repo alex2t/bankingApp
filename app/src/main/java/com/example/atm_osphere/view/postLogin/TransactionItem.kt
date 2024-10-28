@@ -1,6 +1,4 @@
-
-package com.example.atm_osphere.view
-import androidx.compose.foundation.background
+package com.example.atm_osphere.view.postLogin
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card

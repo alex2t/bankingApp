@@ -1,12 +1,16 @@
-package com.example.atm_osphere.utils
+package com.example.atm_osphere.utils.database
 
+import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import androidx.work.WorkManager
 import net.sqlcipher.database.SQLiteDatabase
-import net.sqlcipher.database.SQLiteOpenHelper
 import com.example.atm_osphere.model.Transaction
 import android.util.Log
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import com.example.atm_osphere.utils.workers.TransactionDatabaseWorker
+import net.sqlcipher.database.SQLiteOpenHelper
 
 class TransactionDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -97,7 +101,7 @@ class TransactionDatabaseHelper(private val context: Context) : SQLiteOpenHelper
     // Insert a transaction into the database
     fun insertTransaction(transaction: Transaction, passphrase: String) {
         val db = this.getWritableDatabase(passphrase.toCharArray())
-        val contentValues = android.content.ContentValues().apply {
+        val contentValues = ContentValues().apply {
             put("puid", transaction.puid)
             put("name", transaction.name)
             put("type", transaction.type)
@@ -109,7 +113,7 @@ class TransactionDatabaseHelper(private val context: Context) : SQLiteOpenHelper
 
     // Background transaction insertion using WorkManager
     fun insertTransactionInBackground(transaction: Transaction, passphrase: String) {
-        val inputData = androidx.work.Data.Builder()
+        val inputData = Data.Builder()
             .putString("puid", transaction.puid)
             .putString("name", transaction.name)
             .putString("type", transaction.type)
@@ -117,7 +121,7 @@ class TransactionDatabaseHelper(private val context: Context) : SQLiteOpenHelper
             .putString("passphrase", passphrase)
             .build()
 
-        val workRequest = androidx.work.OneTimeWorkRequestBuilder<TransactionDatabaseWorker>()
+        val workRequest = OneTimeWorkRequestBuilder<TransactionDatabaseWorker>()
             .setInputData(inputData)
             .build()
 
@@ -136,7 +140,7 @@ class TransactionDatabaseHelper(private val context: Context) : SQLiteOpenHelper
         db.beginTransaction()
         try {
             for (transaction in defaultTransactions) {
-                val contentValues = android.content.ContentValues().apply {
+                val contentValues = ContentValues().apply {
                     put("puid", transaction.puid)
                     put("name", transaction.name)
                     put("type", transaction.type)

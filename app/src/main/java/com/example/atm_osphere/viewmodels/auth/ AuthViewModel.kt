@@ -1,6 +1,6 @@
-package com.example.atm_osphere.viewmodels
+package com.example.atm_osphere.viewmodels.auth
 
-import com.example.atm_osphere.utils.UserDatabaseHelper
+import com.example.atm_osphere.utils.database.UserDatabaseHelper
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import net.sqlcipher.database.SQLiteDatabase
 import com.example.atm_osphere.model.User
 import android.util.Log
+import java.util.UUID
 
 class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val passphrase: String) : ViewModel() {
 
@@ -105,7 +106,7 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val 
 
     // Helper function to generate a unique ID
     private fun generateUniqueId(): String {
-        return java.util.UUID.randomUUID().toString()
+        return UUID.randomUUID().toString()
     }
 
     // Clear the status message

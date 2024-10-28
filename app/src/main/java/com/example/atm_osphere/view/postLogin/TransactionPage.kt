@@ -1,4 +1,4 @@
-package com.example.atm_osphere.view
+package com.example.atm_osphere.view.postLogin
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.padding
 
@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import com.example.atm_osphere.viewmodels.AuthViewModel
+import com.example.atm_osphere.view.navigation.BasePage
+import com.example.atm_osphere.view.navigation.DrawerContent
+import com.example.atm_osphere.viewmodels.auth.AuthViewModel
 
 @Composable
 fun TransactionPage(
@@ -28,7 +30,12 @@ fun TransactionPage(
         navController = navController,
         pageTitle = "Transaction Page",
         drawerContent = {
-            DrawerContent(navController = navController, sessionId = sessionId, puid = puid, authViewModel = authViewModel)
+            DrawerContent(
+                navController = navController,
+                sessionId = sessionId,
+                puid = puid,
+                authViewModel = authViewModel
+            )
         },
         content = { paddingValues ->
             Box(

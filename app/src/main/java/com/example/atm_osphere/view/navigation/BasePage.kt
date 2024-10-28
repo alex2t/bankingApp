@@ -1,4 +1,4 @@
-package com.example.atm_osphere.view
+package com.example.atm_osphere.view.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,9 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.rememberCoroutineScope
-import com.example.atm_osphere.viewmodels.AuthViewModel
-import android.util.Log
+import com.example.atm_osphere.viewmodels.auth.AuthViewModel
 
 @Composable
 fun BasePage(

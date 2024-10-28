@@ -1,9 +1,11 @@
-package com.example.atm_osphere.utils
+package com.example.atm_osphere.utils.workers
 
 import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.example.atm_osphere.model.User
+import com.example.atm_osphere.utils.database.UserDatabaseHelper
+
 class UserDatabaseWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
     override fun doWork(): Result {
