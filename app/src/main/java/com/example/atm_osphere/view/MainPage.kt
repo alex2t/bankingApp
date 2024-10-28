@@ -9,19 +9,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.navigation.NavHostController
 import com.example.atm_osphere.viewmodels.TransactionViewModel
+import com.example.atm_osphere.viewmodels.AuthViewModel
 import com.example.atm_osphere.model.Transaction
 import kotlinx.coroutines.flow.collectLatest
-import android.util.Log
 
 @Composable
 fun MainPage(
     navController: NavHostController,
     sessionId: String,
     puid: String,
-    viewModel: TransactionViewModel
+    viewModel: TransactionViewModel,
+    authViewModel: AuthViewModel
 ) {
     var transactions by remember { mutableStateOf(emptyList<Transaction>()) }
     var isLoading by remember { mutableStateOf(false) }
@@ -40,9 +40,15 @@ fun MainPage(
 
     BasePage(
         navController = navController,
-        pageTitle = "Transaction Page",
+        pageTitle = "Main Page",
         drawerContent = {
-            DrawerContent(navController = navController, sessionId = sessionId, puid = puid)
+            DrawerContent(
+                navController = navController,
+                sessionId = sessionId,
+                puid = puid,
+                authViewModel = authViewModel
+
+            )
         },
         content = { paddingValues ->
             Box(
@@ -55,10 +61,9 @@ fun MainPage(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Main content at the top (spinner or transactions)
                     when {
                         isLoading -> {
-                            CircularProgressIndicator(modifier = Modifier.padding(16.dp)) // Show spinner while loading
+                            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
                         }
                         transactions.isNotEmpty() -> {
                             LazyColumn(
@@ -67,17 +72,15 @@ fun MainPage(
                                     .padding(16.dp)
                             ) {
                                 items(transactions) { transaction ->
-                                    TransactionItem(transaction = transaction) // Use the customized TransactionItem composable
+                                    TransactionItem(transaction = transaction)
                                 }
                             }
                         }
                         else -> {
-                            // If loading is false and transactions are empty, show the message
                             Text("No transactions found", modifier = Modifier.padding(16.dp))
                         }
                     }
 
-                    // SessionId and PUID at the bottom
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -91,6 +94,7 @@ fun MainPage(
             }
         },
         sessionId = sessionId,
-        puid = puid
+        puid = puid,
+        authViewModel = authViewModel
     )
 }

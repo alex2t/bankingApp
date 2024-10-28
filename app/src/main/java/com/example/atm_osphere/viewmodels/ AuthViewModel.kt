@@ -17,24 +17,25 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val 
     private val _statusMessage = MutableStateFlow<Pair<String?, Boolean>?>(null)
     val statusMessage: StateFlow<Pair<String?, Boolean>?> get() = _statusMessage
 
-    private val _puid = MutableStateFlow<String?>(null)
+    private val _puid = MutableStateFlow<String?>(null) // Only set for successful sign-in
     val puid: StateFlow<String?> get() = _puid
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-    private var database: SQLiteDatabase? = null
-
-    // Lazily open and cache the database instance
-    private fun getDatabaseInstance(): SQLiteDatabase {
-        if (database == null) {
-            database = databaseHelper.getWritableDatabase(passphrase.toCharArray())
-        }
-        return database!!
+    // New flag to indicate login status
+    private val _loggedIn = MutableStateFlow(false)
+    val loggedIn: StateFlow<Boolean> get() = _loggedIn
+    init {
+        _loggedIn.value = false
     }
+
+
+    private var database: SQLiteDatabase? = null
 
     // Sign In Function
     fun signIn(email: String, password: String) {
+
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -45,7 +46,8 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val 
                         user == null -> "User not found." to false
                         user.password != password -> "Wrong password." to false
                         else -> {
-                            _puid.value = user.permanentUserId
+                            _puid.value = user.permanentUserId // Set PUID only on sign-in
+                            _loggedIn.value = true // Set loggedIn flag to true
                             "Successfully signed in!" to true
                         }
                     }
@@ -63,6 +65,7 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val 
 
     // Create Account Function
     fun createAccount(email: String, password: String) {
+        _puid.value = null
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -89,6 +92,15 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val 
                 _isLoading.value = false
             }
         }
+    }
+
+    // Logout Function
+    fun logout() {
+        Log.d("AuthViewModel", "Entering logout() in AuthViewModel")
+        _puid.value = null // Clear PUID on logout
+        _statusMessage.value = null // Reset the status message
+        _loggedIn.value = false // Ensure loggedIn is reset
+        Log.d("AuthViewModel", "Logout called: PUID cleared and loggedIn set to false.")
     }
 
     // Helper function to generate a unique ID

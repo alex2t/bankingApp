@@ -1,7 +1,6 @@
-
 package com.example.atm_osphere.view
+
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
@@ -9,29 +8,26 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp  // For font size control
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-
-
-
+import com.example.atm_osphere.viewmodels.AuthViewModel
 
 @Composable
 fun DrawerContent(
     navController: NavHostController,
     sessionId: String,
     puid: String,
+    authViewModel: AuthViewModel,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
-            .padding(16.dp)  // Add padding inside the drawer content
-            .fillMaxHeight(),  // Fill height of drawer content
+            .padding(16.dp)
+            .fillMaxHeight(),
         verticalArrangement = Arrangement.Top
     ) {
-
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))  // Add smaller dividers
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Main Account Button
         TextButton(
@@ -45,11 +41,9 @@ fun DrawerContent(
                 contentDescription = "Main Account",
                 modifier = Modifier.padding(end = 8.dp)
             )
-            Text(
-                text = "Main Account",
-                fontSize = 20.sp  // Increase text size
-            )
+            Text(text = "Main Account", fontSize = 20.sp)
         }
+
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Transaction Button
@@ -59,16 +53,9 @@ fun DrawerContent(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-//            Icon(
-//                imageVector = Icons.Filled.Money,
-//                contentDescription = "Transaction",
-//                modifier = Modifier.padding(end = 8.dp)
-//            )
-            Text(
-                text = "Transaction",
-                fontSize = 20.sp  // Increase text size
-            )
+            Text(text = "Transaction", fontSize = 20.sp)
         }
+
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Add Payee Button
@@ -83,33 +70,27 @@ fun DrawerContent(
                 contentDescription = "Add Payee",
                 modifier = Modifier.padding(end = 8.dp)
             )
-            Text(
-                text = "Add Payee",
-                fontSize = 20.sp  // Increase text size
-            )
+            Text(text = "Add Payee", fontSize = 20.sp)
         }
 
-        // Logout Section with Divider
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Logout Button
         TextButton(
             onClick = {
+                authViewModel.logout() // Perform logout action in AuthViewModel
                 navController.navigate("home") {
-                    popUpTo("mainpage") { inclusive = true }  // Navigate to HomePage and clear backstack
+                    popUpTo("home") { inclusive = true } // Navigate to HomePage and clear backstack
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-//            Icon(
-//                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-//                contentDescription = "Exit to app",
-//                modifier = Modifier.padding(end = 8.dp)
-//            )
-            Text(
-                text = "Logout",
-                fontSize = 20.sp  // Increase text size
+            Icon(
+                imageVector = Icons.Filled.ExitToApp,
+                contentDescription = "Logout",
+                modifier = Modifier.padding(end = 8.dp)
             )
+            Text(text = "Logout", fontSize = 20.sp)
         }
     }
 }

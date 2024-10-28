@@ -1,20 +1,27 @@
 package com.example.atm_osphere.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.activity.compose.BackHandler // This import is essential
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
-import androidx.activity.compose.BackHandler
-import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.rememberCoroutineScope
+import com.example.atm_osphere.viewmodels.AuthViewModel
+import android.util.Log
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BasePage(
     navController: NavHostController,
@@ -22,59 +29,64 @@ fun BasePage(
     drawerContent: @Composable () -> Unit,
     content: @Composable (PaddingValues) -> Unit,
     sessionId: String?,
-    puid: String?
+    puid: String?,
+    authViewModel: AuthViewModel
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()  // Create a coroutine scope
 
-    // Handle back button press
     BackHandler {
         navController.navigate("home") {
-            popUpTo("mainpage") { inclusive = true }
+            authViewModel.logout()
+            popUpTo("home") { inclusive = true }
+
         }
     }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            // Adjust the drawer height to match the number of menu options
-            val menuItemsCount = 4 // Set the number of items in the menu (adjust this if needed)
-            val itemHeight = 56.dp // Estimated height for each menu item
-            val totalHeight = (menuItemsCount * itemHeight.value).dp + 32.dp // Total height based on items + padding
-
-            Surface(
+            Card(
                 modifier = Modifier
-                    .wrapContentHeight()
-                    .heightIn(max = totalHeight) // Set max height to match the menu content
-                    .widthIn(max = 280.dp), // Max width of the drawer
-                color = MaterialTheme.colorScheme.background // Non-transparent background
+                    .fillMaxWidth(0.7f)
+                    .padding(16.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                if (sessionId != null && puid != null) {
-                    DrawerContent(navController = navController, sessionId = sessionId, puid = puid)
-                } else {
-                    Text(text = "Session ID or PUID is missing.", color = Color.Red)
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    drawerContent()
                 }
             }
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(pageTitle) },
-                    navigationIcon = {
+        },
+        content = {
+            Scaffold(
+                topBar = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.primary)
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         IconButton(onClick = {
-                            scope.launch { drawerState.open() }
+                            coroutineScope.launch {  // Launch a coroutine to open the drawer
+                                drawerState.open()
+                            }
                         }) {
-                            Icon(Icons.Filled.Menu, contentDescription = "Menu")
+                            Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color.White)
                         }
+                        Text(
+                            text = pageTitle,
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleLarge
+                        )
                     }
-                )
-            },
-            content = { paddingValues ->
-                Column(modifier = Modifier.fillMaxSize()) {
-                    content(paddingValues)
-                }
-            }
-        )
-    }
+                },
+                content = content
+            )
+        }
+    )
 }

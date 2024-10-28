@@ -15,15 +15,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-
+import com.example.atm_osphere.viewmodels.AuthViewModel
 
 @Composable
-fun TransactionPage(navController: NavHostController, sessionId: String, puid: String) {
+fun TransactionPage(
+    navController: NavHostController,
+    sessionId: String,
+    puid: String,
+    authViewModel: AuthViewModel
+) {
     BasePage(
         navController = navController,
         pageTitle = "Transaction Page",
         drawerContent = {
-            DrawerContent(navController = navController, sessionId = sessionId, puid = puid)
+            DrawerContent(navController = navController, sessionId = sessionId, puid = puid, authViewModel = authViewModel)
         },
         content = { paddingValues ->
             Box(
@@ -32,15 +37,20 @@ fun TransactionPage(navController: NavHostController, sessionId: String, puid: S
                     .fillMaxSize(),
                 contentAlignment = Alignment.TopCenter
             ) {
-                // Transaction page content
-                Text(text = "Transaction Page Content")
-
-                // Display sessionId and puid at the bottom left
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.BottomStart
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    // Add payee page content
+                    Text(text = "Add Payee Page Content", modifier = Modifier.padding(16.dp))
+
+                    // SessionId and PUID at the bottom
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
                         Text(text = "Session ID: $sessionId")
                         Text(text = "PUID: $puid")
                     }
@@ -48,8 +58,7 @@ fun TransactionPage(navController: NavHostController, sessionId: String, puid: S
             }
         },
         sessionId = sessionId,
-        puid = puid
+        puid = puid,
+        authViewModel = authViewModel
     )
 }
-
-

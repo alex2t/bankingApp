@@ -9,18 +9,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Arrangement
+import com.example.atm_osphere.viewmodels.AuthViewModel
 
 
-@OptIn(ExperimentalMaterial3Api::class)  // Allow experimental Material3 APIs
+
 @Composable
-fun AddPayee(navController: NavHostController, sessionId: String, puid: String) {
+fun AddPayee(
+    navController: NavHostController,
+    sessionId: String,
+    puid: String,
+    authViewModel: AuthViewModel
+) {
     BasePage(
         navController = navController,
         pageTitle = "Add Payee Page",
         drawerContent = {
-            DrawerContent(navController = navController, sessionId = sessionId, puid = puid)
+            DrawerContent(navController = navController, sessionId = sessionId, puid = puid, authViewModel = authViewModel)
         },
         content = { paddingValues ->
             Box(
@@ -29,15 +36,20 @@ fun AddPayee(navController: NavHostController, sessionId: String, puid: String) 
                     .fillMaxSize(),
                 contentAlignment = Alignment.TopCenter
             ) {
-                // Add payee page content
-                Text(text = "Add Payee Page Content")
-
-                // Display sessionId and puid at the bottom left
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.BottomStart
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    // Add payee page content
+                    Text(text = "Add Payee Page Content", modifier = Modifier.padding(16.dp))
+
+                    // SessionId and PUID at the bottom
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
                         Text(text = "Session ID: $sessionId")
                         Text(text = "PUID: $puid")
                     }
@@ -45,7 +57,7 @@ fun AddPayee(navController: NavHostController, sessionId: String, puid: String) 
             }
         },
         sessionId = sessionId,
-        puid = puid
+        puid = puid,
+        authViewModel = authViewModel
     )
 }
-
