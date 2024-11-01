@@ -9,14 +9,17 @@ import androidx.compose.runtime.collectAsState
 import com.example.atm_osphere.viewmodels.auth.AuthViewModel
 import com.example.atm_osphere.viewmodels.transaction.TransactionViewModelFactory
 import com.example.atm_osphere.viewmodels.transaction.TransactionViewModel
+import com.example.atm_osphere.viewmodels.payee.PayeeViewModel
+import com.example.atm_osphere.viewmodels.payee.PayeeViewModelFactory
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
+import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.atm_osphere.view.postLogin.AddPayee
 import com.example.atm_osphere.view.auth.CreateAccountScreen
 import com.example.atm_osphere.view.auth.HomePage
 import com.example.atm_osphere.view.postLogin.MainPage
 import com.example.atm_osphere.view.auth.SignInScreen
-import com.example.atm_osphere.view.postLogin.TransactionPage
+import com.example.atm_osphere.view.postLogin.PayPayee
 
 
 @Composable
@@ -39,6 +42,13 @@ fun NavigationSetup(
             "your-secure-passphrase".toCharArray()
         )
     )
+    val payeeViewModel: PayeeViewModel = viewModel(
+        factory = PayeeViewModelFactory(
+            PayeeDatabaseHelper(context),
+            "your-secure-passphrase"
+        )
+    )
+
 
     NavHost(
         navController = navController,
@@ -84,14 +94,16 @@ fun NavigationSetup(
             }
         }
 
-        composable("transaction/{sessionId}/{puid}") { backStackEntry ->
+        composable("payPayee/{sessionId}/{puid}") { backStackEntry ->
             val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             val puid = backStackEntry.arguments?.getString("puid") ?: ""
-            TransactionPage(
+            PayPayee(
                 navController = navController,
                 sessionId = sessionId,
                 puid = puid,
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                payeeViewModel = payeeViewModel,
+                transactionviewModel = transactionViewModel
             )
         }
 
@@ -102,7 +114,8 @@ fun NavigationSetup(
                 navController = navController,
                 sessionId = sessionId,
                 puid = puid,
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                payeeViewModel = payeeViewModel
             )
         }
     }

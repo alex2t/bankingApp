@@ -42,14 +42,13 @@ fun MainPage(
 
     BasePage(
         navController = navController,
-        pageTitle = "Main Page",
+        pageTitle = "View Transactions",
         drawerContent = {
             DrawerContent(
                 navController = navController,
                 sessionId = sessionId,
                 puid = puid,
                 authViewModel = authViewModel
-
             )
         },
         content = { paddingValues ->

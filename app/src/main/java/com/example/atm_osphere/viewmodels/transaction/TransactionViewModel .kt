@@ -61,4 +61,15 @@ class TransactionViewModel(
             }
         }
     }
+    fun insertTransactionInBackground(transaction: Transaction) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                Log.d("TransactionViewModel", "Inserting transaction in background for PUID: ${transaction.puid}")
+                databaseHelper.insertTransactionInBackground(transaction, passphrase.joinToString(""))
+                Log.d("TransactionViewModel", "Transaction inserted in background")
+            } catch (e: Exception) {
+                Log.e("TransactionViewModel", "Error inserting transaction in background", e)
+            }
+        }
+    }
 }

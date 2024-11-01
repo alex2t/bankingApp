@@ -23,7 +23,7 @@ fun DrawerContent(
 ) {
     Column(
         modifier = modifier
-            .padding(16.dp)
+            .padding(8.dp)
             .fillMaxHeight(),
         verticalArrangement = Arrangement.Top
     ) {
@@ -49,7 +49,7 @@ fun DrawerContent(
         // Transaction Button
         TextButton(
             onClick = {
-                navController.navigate("transaction/$sessionId/$puid")
+                navController.navigate("payPayee/$sessionId/$puid")
             },
             modifier = Modifier.fillMaxWidth()
         ) {
