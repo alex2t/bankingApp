@@ -23,7 +23,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Spacer
-import android.util.Log
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Icon
+import androidx.compose.ui.platform.LocalConfiguration
+
+
 
 @Composable
 fun AddPayee(
@@ -33,6 +40,12 @@ fun AddPayee(
     authViewModel: AuthViewModel,
     payeeViewModel: PayeeViewModel
 ) {
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val offsetFromTop = screenHeight * 0.1f  // 20% from top
+    LaunchedEffect(Unit) {
+        payeeViewModel.clearIban()
+        payeeViewModel.resetStatusMessage()
+    }
     BasePage(
         navController = navController,
         pageTitle = "Add Payee Page",
@@ -56,7 +69,13 @@ fun AddPayee(
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     // AddPayee form content
-                    AddPayeeForm(payeeViewModel = payeeViewModel, puid = puid)
+                    AddPayeeForm(
+                        payeeViewModel = payeeViewModel,
+                        puid = puid,
+                        sessionId = sessionId,
+                        modifier = Modifier.padding(top = offsetFromTop)
+
+                    )
 
                     // SessionId and PUID at the bottom
                     Column(
@@ -81,9 +100,11 @@ fun AddPayee(
 fun AddPayeeForm(
     payeeViewModel: PayeeViewModel,
     puid: String,
+    sessionId: String,
+    modifier: Modifier = Modifier
 ) {
     var name by remember { mutableStateOf("") }
-    var selectedCountry by remember { mutableStateOf("DE") }
+    var selectedCountry by remember { mutableStateOf("FRANCE") }
     val iban by payeeViewModel.iban.collectAsState()
     val statusMessage by payeeViewModel.statusMessage.collectAsState()
     val countryOptions = listOf("ISRAEL","UK","FRANCE","SPAIN","USA","JAPAN")
@@ -92,14 +113,14 @@ fun AddPayeeForm(
     val coroutineScope = rememberCoroutineScope()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
         TextField(
             value = name,
             onValueChange = {
-                if (it.all { char -> char.isLetter() }) {
+                if (it.all { char -> char.isLetter() || char.isWhitespace()}) {
                     if (it.length <= 20) {
                         name = it
                         payeeViewModel.resetStatusMessage()
@@ -117,14 +138,24 @@ fun AddPayeeForm(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Country Dropdown Menu
-        Box {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = true }
+                .padding(16.dp)
+                .border(1.dp, Color.Gray, shape = RoundedCornerShape(4.dp))
+                .padding(8.dp)
+        ) {
             Text(
                 text = "Country: $selectedCountry",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = true }
-                    .padding(16.dp)
+                modifier = Modifier.align(Alignment.CenterStart)
             )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = "Dropdown arrow",
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
+
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
@@ -141,18 +172,19 @@ fun AddPayeeForm(
             }
         }
 
+
         Spacer(modifier = Modifier.height(8.dp))
 
         // Status Message
-        statusMessage?.let { (message, isSuccess) ->
-            if (message?.isNotBlank() == true) {
-                Text(
-                    text = message,
-                    color = if (isSuccess) Color.Green else Color.Red,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-        }
+//        statusMessage?.let { (message, isSuccess) ->
+//            if (message?.isNotBlank() == true) {
+//                Text(
+//                    text = message,
+//                    color = if (isSuccess) Color.Green else Color.Red,
+//                    modifier = Modifier.padding(top = 8.dp)
+//                )
+//            }
+//        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -174,11 +206,24 @@ fun AddPayeeForm(
             Text("IBAN: $iban", style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(16.dp))
 
+            statusMessage?.let { (message, isSuccess) ->
+                if (message?.isNotBlank() == true) {
+                    Text(
+                        text = message,
+                        color = Color.Green,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+
             // Add Payee Button
             if (showAddPayeeButton) {
                 Button(
                     onClick = {
-                        payeeViewModel.addPayee(puid, name, selectedCountry)
+                        val currentIban = payeeViewModel.iban.value
+                        if (currentIban != null) {
+                            payeeViewModel.addPayee(puid, name, selectedCountry, currentIban)
+                        }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -187,6 +232,17 @@ fun AddPayeeForm(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.weight(1f))
+        // Display Session ID and PUID at the bottom
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(text = "Session ID: $sessionId")
+            Text(text = "PUID: $puid")
+        }
     }
+
 }

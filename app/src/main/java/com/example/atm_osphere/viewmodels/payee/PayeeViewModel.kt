@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
 import com.example.atm_osphere.model.Payee
+import kotlinx.coroutines.delay
 import android.util.Log
 
 class PayeeViewModel(
@@ -36,7 +37,7 @@ class PayeeViewModel(
         }
     }
 
-    fun addPayee(puid: String, name: String, countryCode: String) {
+    fun addPayee(puid: String, name: String, countryCode: String, iban: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val payee = Payee(name, countryCode, _iban.value!!)
@@ -48,6 +49,9 @@ class PayeeViewModel(
                         "An error occurred: Payee was not added" to false
                     }
                 }
+                delay(2000)  // Allows the success message to be visible temporarily
+                _iban.value = null
+                _statusMessage.value = null
             } catch (e: Exception) {
                 _statusMessage.update {
                     "An error occurred: ${e.message}" to false
@@ -70,6 +74,13 @@ class PayeeViewModel(
     }
 
     fun resetStatusMessage() {
-        _statusMessage.value = "" to false
+        viewModelScope.launch {
+            delay(2000)  // Adjust delay duration as desired
+            _statusMessage.value = null
+        }
+    }
+    fun clearIban() {
+        _iban.value = null
+
     }
 }

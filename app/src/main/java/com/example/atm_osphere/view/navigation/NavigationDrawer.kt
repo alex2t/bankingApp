@@ -23,7 +23,7 @@ fun DrawerContent(
 ) {
     Column(
         modifier = modifier
-            .padding(8.dp)
+            .padding(1.dp)
             .fillMaxHeight(),
         verticalArrangement = Arrangement.Top
     ) {
@@ -92,5 +92,6 @@ fun DrawerContent(
             )
             Text(text = "Logout", fontSize = 20.sp)
         }
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
     }
 }
