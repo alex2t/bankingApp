@@ -19,6 +19,10 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
 import com.example.atm_osphere.viewmodels.auth.AuthViewModel
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
+import androidx.compose.material3.SnackbarHost
+
 
 @Composable
 fun BasePage(
@@ -28,7 +32,8 @@ fun BasePage(
     content: @Composable (PaddingValues) -> Unit,
     sessionId: String?,
     puid: String?,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()  // Create a coroutine scope
@@ -83,6 +88,7 @@ fun BasePage(
                         )
                     }
                 },
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 content = content
             )
         }

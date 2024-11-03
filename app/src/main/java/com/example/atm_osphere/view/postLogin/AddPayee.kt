@@ -30,8 +30,6 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalConfiguration
 
-
-
 @Composable
 fun AddPayee(
     navController: NavHostController,
@@ -40,12 +38,39 @@ fun AddPayee(
     authViewModel: AuthViewModel,
     payeeViewModel: PayeeViewModel
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val offsetFromTop = screenHeight * 0.1f  // 20% from top
-    LaunchedEffect(Unit) {
-        payeeViewModel.clearIban()
-        payeeViewModel.resetStatusMessage()
+    val ibanStatusMessage by payeeViewModel.ibanStatusMessage.collectAsState()
+    val addPayeeStatusMessage by payeeViewModel.addPayeeStatusMessage.collectAsState()
+
+    // Show snackbar for IBAN generation status
+    LaunchedEffect(ibanStatusMessage) {
+        ibanStatusMessage?.let { (message, isSuccess) ->
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    actionLabel = if (isSuccess) "OK" else "Retry"
+                )
+                payeeViewModel.resetIbanStatusMessage()
+            }
+        }
     }
+
+    // Show snackbar for Add Payee status
+    LaunchedEffect(addPayeeStatusMessage) {
+        addPayeeStatusMessage?.let { (message, isSuccess) ->
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    actionLabel = if (isSuccess) "OK" else "Retry"
+                )
+                payeeViewModel.resetAddPayeeStatusMessage()
+            }
+        }
+    }
+
     BasePage(
         navController = navController,
         pageTitle = "Add Payee Page",
@@ -68,13 +93,12 @@ fun AddPayee(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // AddPayee form content
+                    // Display AddPayeeForm content
                     AddPayeeForm(
                         payeeViewModel = payeeViewModel,
                         puid = puid,
                         sessionId = sessionId,
                         modifier = Modifier.padding(top = offsetFromTop)
-
                     )
 
                     // SessionId and PUID at the bottom
@@ -94,8 +118,10 @@ fun AddPayee(
         puid = puid,
         authViewModel = authViewModel
     )
-}
 
+    // Place the SnackbarHost outside BasePage to display snackbar messages
+    SnackbarHost(hostState = snackbarHostState)
+}
 @Composable
 fun AddPayeeForm(
     payeeViewModel: PayeeViewModel,
@@ -106,11 +132,9 @@ fun AddPayeeForm(
     var name by remember { mutableStateOf("") }
     var selectedCountry by remember { mutableStateOf("FRANCE") }
     val iban by payeeViewModel.iban.collectAsState()
-    val statusMessage by payeeViewModel.statusMessage.collectAsState()
-    val countryOptions = listOf("ISRAEL","UK","FRANCE","SPAIN","USA","JAPAN")
+    val countryOptions = listOf("ISRAEL", "UK", "FRANCE", "SPAIN", "USA", "JAPAN")
     var expanded by remember { mutableStateOf(false) }
-    var showAddPayeeButton by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
+    val showAddPayeeButton = iban != null // Show the button only if IBAN is generated
 
     Column(
         modifier = modifier
@@ -120,13 +144,8 @@ fun AddPayeeForm(
         TextField(
             value = name,
             onValueChange = {
-                if (it.all { char -> char.isLetter() || char.isWhitespace()}) {
-                    if (it.length <= 20) {
-                        name = it
-                        payeeViewModel.resetStatusMessage()
-                    }
-                } else {
-                    payeeViewModel.resetStatusMessage()
+                if (it.all { char -> char.isLetter() || char.isWhitespace() }) {
+                    if (it.length <= 20) name = it
                 }
             },
             label = { Text("Payee Name") },
@@ -163,8 +182,8 @@ fun AddPayeeForm(
                 countryOptions.forEach { country ->
                     DropdownMenuItem(
                         onClick = {
-                            selectedCountry = country // Update selected country
-                            expanded = false // Close the menu
+                            selectedCountry = country
+                            expanded = false
                         },
                         text = { Text(text = country) }
                     )
@@ -172,31 +191,12 @@ fun AddPayeeForm(
             }
         }
 
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Status Message
-//        statusMessage?.let { (message, isSuccess) ->
-//            if (message?.isNotBlank() == true) {
-//                Text(
-//                    text = message,
-//                    color = if (isSuccess) Color.Green else Color.Red,
-//                    modifier = Modifier.padding(top = 8.dp)
-//                )
-//            }
-//        }
-
         Spacer(modifier = Modifier.height(16.dp))
 
         // Generate IBAN Button
         if (iban == null) {
             Button(
-                onClick = {
-                    coroutineScope.launch {
-                        payeeViewModel.generateIban(selectedCountry)
-                        showAddPayeeButton = true
-                    }
-                },
+                onClick = { payeeViewModel.generateIban(selectedCountry) },
                 enabled = name.isNotEmpty() && selectedCountry.isNotEmpty(),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -206,23 +206,12 @@ fun AddPayeeForm(
             Text("IBAN: $iban", style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(16.dp))
 
-            statusMessage?.let { (message, isSuccess) ->
-                if (message?.isNotBlank() == true) {
-                    Text(
-                        text = message,
-                        color = Color.Green,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-            }
-
             // Add Payee Button
             if (showAddPayeeButton) {
                 Button(
                     onClick = {
-                        val currentIban = payeeViewModel.iban.value
-                        if (currentIban != null) {
-                            payeeViewModel.addPayee(puid, name, selectedCountry, currentIban)
+                        iban?.let { nonNullIban ->
+                            payeeViewModel.addPayee(puid, name, selectedCountry, nonNullIban)
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -231,18 +220,5 @@ fun AddPayeeForm(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.weight(1f))
-        // Display Session ID and PUID at the bottom
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(text = "Session ID: $sessionId")
-            Text(text = "PUID: $puid")
-        }
     }
-
 }

@@ -12,7 +12,6 @@ import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
 import com.example.atm_osphere.model.Payee
 import kotlinx.coroutines.delay
 import android.util.Log
-
 class PayeeViewModel(
     private val databaseHelper: PayeeDatabaseHelper,
     private val passphrase: String
@@ -21,8 +20,12 @@ class PayeeViewModel(
     private val _iban = MutableStateFlow<String?>(null)
     val iban: StateFlow<String?> get() = _iban
 
-    private val _statusMessage = MutableStateFlow<Pair<String?, Boolean>?>(null)
-    val statusMessage: StateFlow<Pair<String?, Boolean>?> get() = _statusMessage
+    // Separate status messages for IBAN and Add Payee actions
+    private val _ibanStatusMessage = MutableStateFlow<Pair<String, Boolean>?>(null)
+    val ibanStatusMessage: StateFlow<Pair<String, Boolean>?> get() = _ibanStatusMessage
+
+    private val _addPayeeStatusMessage = MutableStateFlow<Pair<String, Boolean>?>(null)
+    val addPayeeStatusMessage: StateFlow<Pair<String, Boolean>?> get() = _addPayeeStatusMessage
 
     private val _payees = MutableStateFlow<List<Payee>>(emptyList())
     val payees: StateFlow<List<Payee>> get() = _payees
@@ -31,9 +34,10 @@ class PayeeViewModel(
         try {
             _iban.value = generateFakeIban(country)
             Log.d("PayeeViewModel", "IBAN generated successfully for country: $country")
+            _ibanStatusMessage.value = "IBAN generated successfully" to true // Set success message
         } catch (e: Exception) {
             Log.e("PayeeViewModel", "Error generating IBAN for country: $country", e)
-            _statusMessage.value = "Failed to generate IBAN" to false
+            _ibanStatusMessage.value = "Failed to generate IBAN" to false // Set error message
         }
     }
 
@@ -42,22 +46,26 @@ class PayeeViewModel(
             try {
                 val payee = Payee(name, countryCode, _iban.value!!)
                 val success = databaseHelper.insertPayee(puid, payee, passphrase)
-                _statusMessage.update {
-                    if (success) {
-                        "Payee added successfully" to true
-                    } else {
-                        "An error occurred: Payee was not added" to false
-                    }
+                _addPayeeStatusMessage.value = if (success) {
+                    "Payee added successfully" to true
+                } else {
+                    "An error occurred: Payee was not added" to false
                 }
-                delay(2000)  // Allows the success message to be visible temporarily
+                delay(2000) // Allows the success message to be visible temporarily
                 _iban.value = null
-                _statusMessage.value = null
+                _addPayeeStatusMessage.value = null
             } catch (e: Exception) {
-                _statusMessage.update {
-                    "An error occurred: ${e.message}" to false
-                }
+                _addPayeeStatusMessage.value = "An error occurred: ${e.message}" to false
             }
         }
+    }
+
+    fun resetIbanStatusMessage() {
+        _ibanStatusMessage.value = null
+    }
+
+    fun resetAddPayeeStatusMessage() {
+        _addPayeeStatusMessage.value = null
     }
 
     fun getPayeesByPuid(puid: String) {
@@ -68,19 +76,12 @@ class PayeeViewModel(
                 Log.d("PayeeViewModel", "Fetched ${payeesList.size} payees for puid: $puid")
             } catch (e: Exception) {
                 Log.e("PayeeViewModel", "Error fetching payees for puid: $puid", e)
-                _statusMessage.update { "Failed to fetch payees" to false }
+                _addPayeeStatusMessage.value = "Failed to fetch payees" to false
             }
         }
     }
 
-    fun resetStatusMessage() {
-        viewModelScope.launch {
-            delay(2000)  // Adjust delay duration as desired
-            _statusMessage.value = null
-        }
-    }
     fun clearIban() {
         _iban.value = null
-
     }
 }

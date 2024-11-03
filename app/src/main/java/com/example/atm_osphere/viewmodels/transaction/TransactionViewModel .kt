@@ -24,6 +24,10 @@ class TransactionViewModel(
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> get() = _loading
 
+    // StateFlow for transaction status messages
+    private val _transactionStatus = MutableStateFlow<String?>(null)
+    val transactionStatus: StateFlow<String?> get() = _transactionStatus
+
     // Function to fetch transactions for a given puid
     fun fetchTransactions(puid: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -62,14 +66,21 @@ class TransactionViewModel(
         }
     }
     fun insertTransactionInBackground(transaction: Transaction) {
+        _loading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                Log.d("TransactionViewModel", "Inserting transaction in background for PUID: ${transaction.puid}")
+                Log.d("TransactionViewModel", "Inserting transaction for PUID: ${transaction.puid}")
                 databaseHelper.insertTransactionInBackground(transaction, passphrase.joinToString(""))
-                Log.d("TransactionViewModel", "Transaction inserted in background")
+                _transactionStatus.value = "Transaction successful"
             } catch (e: Exception) {
-                Log.e("TransactionViewModel", "Error inserting transaction in background", e)
+                Log.e("TransactionViewModel", "Error inserting transaction", e)
+                _transactionStatus.value = "Transaction failed: ${e.localizedMessage}"
+            } finally {
+                _loading.value = false
             }
         }
+    }
+    fun clearTransactionStatus() {
+        _transactionStatus.value = null
     }
 }
