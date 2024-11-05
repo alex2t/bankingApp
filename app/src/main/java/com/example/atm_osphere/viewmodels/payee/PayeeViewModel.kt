@@ -84,4 +84,8 @@ class PayeeViewModel(
     fun clearIban() {
         _iban.value = null
     }
+    fun resetFields() {
+        _iban.value = null
+        _addPayeeStatusMessage.value = null
+    }
 }

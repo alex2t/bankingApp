@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalConfiguration
+import kotlinx.coroutines.delay
 
 @Composable
 fun AddPayee(
@@ -45,15 +46,19 @@ fun AddPayee(
     val ibanStatusMessage by payeeViewModel.ibanStatusMessage.collectAsState()
     val addPayeeStatusMessage by payeeViewModel.addPayeeStatusMessage.collectAsState()
 
+
+
     // Show snackbar for IBAN generation status
+    // IBAN Status Snackbar with auto-dismiss
     LaunchedEffect(ibanStatusMessage) {
-        ibanStatusMessage?.let { (message, isSuccess) ->
+        ibanStatusMessage?.let { (message, _) ->
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
                     message = message,
-                    actionLabel = if (isSuccess) "OK" else "Retry"
+                    duration = SnackbarDuration.Short  // Automatically dismisses after a short duration (~2 seconds)
                 )
-                payeeViewModel.resetIbanStatusMessage()
+                delay(2000)  // Delay for 2 seconds to ensure visibility
+                payeeViewModel.resetIbanStatusMessage() // Reset IBAN status
             }
         }
     }
@@ -98,7 +103,8 @@ fun AddPayee(
                         payeeViewModel = payeeViewModel,
                         puid = puid,
                         sessionId = sessionId,
-                        modifier = Modifier.padding(top = offsetFromTop)
+                        addPayeeStatusMessage = addPayeeStatusMessage,
+                        modifier = Modifier.padding(top = offsetFromTop),
                     )
 
                     // SessionId and PUID at the bottom
@@ -127,6 +133,7 @@ fun AddPayeeForm(
     payeeViewModel: PayeeViewModel,
     puid: String,
     sessionId: String,
+    addPayeeStatusMessage: Pair<String, Boolean>?,
     modifier: Modifier = Modifier
 ) {
     var name by remember { mutableStateOf("") }
@@ -135,6 +142,18 @@ fun AddPayeeForm(
     val countryOptions = listOf("ISRAEL", "UK", "FRANCE", "SPAIN", "USA", "JAPAN")
     var expanded by remember { mutableStateOf(false) }
     val showAddPayeeButton = iban != null // Show the button only if IBAN is generated
+    //val addPayeeStatusMessage by payeeViewModel.addPayeeStatusMessage.collectAsState()
+
+    LaunchedEffect(addPayeeStatusMessage) {
+        addPayeeStatusMessage?.let { (_, isSuccess) ->
+            if (isSuccess) {
+                name = ""
+                selectedCountry = "FRANCE"
+                payeeViewModel.resetFields()
+            }
+        }
+    }
+
 
     Column(
         modifier = modifier
@@ -220,5 +239,24 @@ fun AddPayeeForm(
                 }
             }
         }
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Display sessionId and puid at the bottom
+        Text(
+            text = "Session ID: $sessionId",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+                .align(Alignment.CenterHorizontally)
+        )
+        Text(
+            text = "PUID: $puid",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+                .align(Alignment.CenterHorizontally)
+        )
     }
 }

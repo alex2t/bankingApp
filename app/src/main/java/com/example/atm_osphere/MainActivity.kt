@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             var sessionId = remember { mutableStateOf(UUID.randomUUID().toString()) }
-                var puid = remember { mutableStateOf<String?>(null) }
+            var puid = remember { mutableStateOf<String?>(null) }
 
             // Initialize AuthViewModel using ViewModelProvider
             val authViewModel = ViewModelProvider(this, AuthViewModelFactory(UserDatabaseHelper(this), "your-secure-passphrase"))
