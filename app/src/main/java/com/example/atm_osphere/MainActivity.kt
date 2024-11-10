@@ -23,9 +23,10 @@ class MainActivity : ComponentActivity() {
             var puid = remember { mutableStateOf<String?>(null) }
 
             // Initialize AuthViewModel using ViewModelProvider
-            val authViewModel = ViewModelProvider(this, AuthViewModelFactory(UserDatabaseHelper(this), "your-secure-passphrase"))
-                .get(AuthViewModel::class.java)
-
+            val authViewModel = ViewModelProvider(
+                this,
+                AuthViewModelFactory(UserDatabaseHelper(this), "your-secure-passphrase")
+            ).get(AuthViewModel::class.java)
             // Set up navigation for both pre-login and post-login
             NavigationSetup(
                 navController = navController,

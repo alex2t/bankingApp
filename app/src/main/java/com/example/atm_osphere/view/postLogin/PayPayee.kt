@@ -29,7 +29,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
-
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun PayPayee(
@@ -39,10 +41,12 @@ fun PayPayee(
     authViewModel: AuthViewModel,
     payeeViewModel: PayeeViewModel,
     transactionviewModel: TransactionViewModel,
+    //onPayeeSelected: (Payee) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() } // Localized to PayPayee
+    val snackbarHostState = remember { SnackbarHostState() }
     var selectedPayee by remember { mutableStateOf<Payee?>(null) }
+    var selectedPayeeId by remember { mutableStateOf<Int?>(null) } // Store payeeId for transaction
     var amount by remember { mutableStateOf("") }
     val payees by payeeViewModel.payees.collectAsState(initial = emptyList())
     val isLoading by transactionviewModel.loading.collectAsState()
@@ -57,10 +61,10 @@ fun PayPayee(
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(it)
                 transactionviewModel.clearTransactionStatus()
-                // Reset input fields on success
                 if (it == "Transaction successful") {
                     amount = "" // Clear amount text field
-                    selectedPayee = null // Reset dropdown to initial value
+                    selectedPayee = null // Reset dropdown
+                    selectedPayeeId = null // Reset selectedPayeeId
                 }
             }
         }
@@ -89,7 +93,10 @@ fun PayPayee(
 
                 PayPayeeDropdown(
                     payees = payees,
-                    onPayeeSelected = { payee -> selectedPayee = payee },
+                    onPayeeSelected = { payee ->
+                        selectedPayee = payee
+                        selectedPayeeId = payee.payeeId // Update selectedPayeeId
+                    },
                     selectedPayee = selectedPayee
                 )
 
@@ -107,21 +114,24 @@ fun PayPayee(
 
                 Button(
                     onClick = {
-                        if (selectedPayee != null && amount.isNotEmpty()) {
+                        if (selectedPayeeId != null && amount.isNotEmpty()) {
+                            val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                             coroutineScope.launch {
                                 transactionviewModel.insertTransactionInBackground(
                                     Transaction(
+                                        transactionId = null,
                                         puid = puid,
-                                        name = selectedPayee!!.name,
-                                        type = "debit",
-                                        amount = amount.toDouble()
+                                        payeeId = selectedPayeeId!!, // Use selectedPayeeId
+                                        amount = amount.toDouble(),
+                                        date = currentDate,
+                                        transactionType = "debit"
                                     )
                                 )
                             }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading // Disable button while loading
+                    enabled = !isLoading
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
@@ -135,6 +145,7 @@ fun PayPayee(
 
                 Spacer(modifier = Modifier.weight(1f))
 
+                // Display Session ID and PUID at the bottom
                 Text(
                     text = "Session ID: $sessionId",
                     modifier = Modifier.fillMaxWidth(),
@@ -154,13 +165,11 @@ fun PayPayee(
     )
 }
 
-
 @Composable
 fun PayPayeeDropdown(
     payees: List<Payee>,
     onPayeeSelected: (Payee) -> Unit,
     selectedPayee: Payee?
-
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedPayeeText by remember { mutableStateOf("Select a Payee") }
@@ -168,7 +177,7 @@ fun PayPayeeDropdown(
     // Reset dropdown text when selectedPayee is null
     LaunchedEffect(selectedPayee) {
         if (selectedPayee == null) {
-            selectedPayeeText = "Select a Payee" // Reset to initial value
+            selectedPayeeText = "Select a Payee"
         }
     }
 
@@ -180,20 +189,17 @@ fun PayPayeeDropdown(
             .border(1.dp, Color.Gray, shape = RoundedCornerShape(4.dp))
             .padding(8.dp)
     ) {
-        // Display selected payee or default text
         Text(
             text = selectedPayeeText,
             modifier = Modifier.align(Alignment.CenterStart)
         )
 
-        // Dropdown arrow icon
         Icon(
             imageVector = Icons.Default.ArrowDropDown,
             contentDescription = "Dropdown arrow",
             modifier = Modifier.align(Alignment.CenterEnd)
         )
 
-        // Dropdown menu to display payee options
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
@@ -212,4 +218,5 @@ fun PayPayeeDropdown(
         }
     }
 }
+
 

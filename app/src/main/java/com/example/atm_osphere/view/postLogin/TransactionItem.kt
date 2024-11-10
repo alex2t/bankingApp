@@ -12,14 +12,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.atm_osphere.model.Transaction
+import com.example.atm_osphere.model.TransactionWithPayee
 import java.util.Locale
 
 
 @Composable
-fun TransactionItem(transaction: Transaction) {
+fun TransactionItem(transaction: TransactionWithPayee) {
     // Define colors based on transaction type (debit or credit)
-    val transactionColor = if (transaction.type == "credit") Color(0xFF4CAF50) else Color(0xFFF44336)
+    val transactionColor = if (transaction.transactionType == "credit") Color(0xFF4CAF50) else Color(0xFFF44336)
 
     // Card composable for better visual styling
     Card(
@@ -42,13 +42,13 @@ fun TransactionItem(transaction: Transaction) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = transaction.name,
+                    text = transaction.payeeName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
                 Text(
-                    text = transaction.type.replaceFirstChar
+                    text = transaction.transactionType.replaceFirstChar
                     { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
                     style = MaterialTheme.typography.bodyMedium,
                     color = transactionColor,

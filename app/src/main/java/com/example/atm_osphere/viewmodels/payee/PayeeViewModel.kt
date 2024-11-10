@@ -12,8 +12,18 @@ import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
 import com.example.atm_osphere.model.Payee
 import kotlinx.coroutines.delay
 import android.util.Log
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.atm_osphere.utils.workers.PayeeDatabaseWorker
+import androidx.work.Data
+import android.content.Context
+import androidx.work.WorkInfo
+import kotlinx.coroutines.withContext
+
+
 class PayeeViewModel(
     private val databaseHelper: PayeeDatabaseHelper,
+    private val workManager: WorkManager,
     private val passphrase: String
 ) : ViewModel() {
 
@@ -44,21 +54,53 @@ class PayeeViewModel(
     fun addPayee(puid: String, name: String, countryCode: String, iban: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val payee = Payee(name, countryCode, _iban.value!!)
-                val success = databaseHelper.insertPayee(puid, payee, passphrase)
-                _addPayeeStatusMessage.value = if (success) {
-                    "Payee added successfully" to true
-                } else {
-                    "An error occurred: Payee was not added" to false
+                // Prepare input data for the worker
+                val payeeData = Data.Builder()
+                    .putString("puid", puid)
+                    .putString("name", name)
+                    .putString("country", countryCode)
+                    .putString("iban", iban)
+                    .putString("passphrase", passphrase)
+                    .build()
+
+                // Create and enqueue a work request for PayeeDatabaseWorker
+                val workRequest = OneTimeWorkRequestBuilder<PayeeDatabaseWorker>()
+                    .setInputData(payeeData)
+                    .build()
+
+                // Enqueue the work request using the injected WorkManager instance
+                workManager.enqueue(workRequest)
+
+                // Switch to the main thread to observe the work result
+                withContext(Dispatchers.Main) {
+                    workManager.getWorkInfoByIdLiveData(workRequest.id)
+                        .observeForever { workInfo ->
+                            if (workInfo != null && workInfo.state.isFinished) {
+                                if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                                    _addPayeeStatusMessage.value = "Payee added successfully" to true
+                                } else {
+                                    val errorMessage = workInfo.outputData.getString("error_message")
+                                        ?: "An error occurred: Payee was not added"
+                                    _addPayeeStatusMessage.value = errorMessage to false
+                                }
+
+                                // Clear the status message after a short delay
+                                viewModelScope.launch {
+                                    delay(2000)
+                                    _addPayeeStatusMessage.value = null
+                                }
+                            }
+                        }
                 }
-                delay(2000) // Allows the success message to be visible temporarily
-                _iban.value = null
-                _addPayeeStatusMessage.value = null
             } catch (e: Exception) {
                 _addPayeeStatusMessage.value = "An error occurred: ${e.message}" to false
             }
         }
     }
+
+
+
+
 
     fun resetIbanStatusMessage() {
         _ibanStatusMessage.value = null
@@ -84,8 +126,10 @@ class PayeeViewModel(
     fun clearIban() {
         _iban.value = null
     }
+
     fun resetFields() {
         _iban.value = null
         _addPayeeStatusMessage.value = null
     }
 }
+

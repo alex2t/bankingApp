@@ -38,17 +38,18 @@ fun NavigationSetup(
 
     val transactionViewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModelFactory(
-            TransactionDatabaseHelper(context),
-            "your-secure-passphrase".toCharArray()
-        )
-    )
-    val payeeViewModel: PayeeViewModel = viewModel(
-        factory = PayeeViewModelFactory(
-            PayeeDatabaseHelper(context),
-            "your-secure-passphrase"
+            databaseHelper = TransactionDatabaseHelper(context),
+            context = context,
+            passphrase = "your-secure-passphrase".toCharArray()
         )
     )
 
+    val payeeViewModel: PayeeViewModel = viewModel(
+        factory = PayeeViewModelFactory(
+            context = context,
+            passphrase = "your-secure-passphrase"
+        )
+    )
 
     NavHost(
         navController = navController,

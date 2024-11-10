@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.atm_osphere.viewmodels.transaction.TransactionViewModel
 import com.example.atm_osphere.viewmodels.auth.AuthViewModel
-import com.example.atm_osphere.model.Transaction
+import com.example.atm_osphere.model.TransactionWithPayee
 import com.example.atm_osphere.view.navigation.BasePage
 import com.example.atm_osphere.view.navigation.DrawerContent
 import kotlinx.coroutines.flow.collectLatest
@@ -25,11 +25,13 @@ fun MainPage(
     viewModel: TransactionViewModel,
     authViewModel: AuthViewModel
 ) {
-    var transactions by remember { mutableStateOf(emptyList<Transaction>()) }
+    //var transactions by remember { mutableStateOf(emptyList<Transaction>()) }
+    var transactions by remember { mutableStateOf<List<TransactionWithPayee>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
 
+
     LaunchedEffect(puid) {
-        viewModel.fetchTransactions(puid)
+        viewModel.fetchTransactions(puid)  // Fetch transactions with the payee name included
 
         viewModel.transactions.collectLatest { newTransactions ->
             transactions = newTransactions

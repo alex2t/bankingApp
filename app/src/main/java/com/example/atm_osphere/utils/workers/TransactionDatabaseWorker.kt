@@ -1,36 +1,35 @@
 package com.example.atm_osphere.utils.workers
 
+import android.content.ContentValues
 import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.example.atm_osphere.model.Transaction
-import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
+import com.example.atm_osphere.utils.database.AppDatabaseHelper
 
-class TransactionDatabaseWorker(
-    context: Context,
-    workerParams: WorkerParameters
-) : Worker(context, workerParams) {
+class TransactionDatabaseWorker (context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
 
     override fun doWork(): Result {
-        val passphrase = inputData.getString("passphrase")?.toCharArray() ?: return Result.failure()
-        val puid = inputData.getString("puid") ?: return Result.failure()
-        val name = inputData.getString("name") ?: return Result.failure()
-        val type = inputData.getString("type") ?: return Result.failure()
-        val amount = inputData.getDouble("amount", -1.0)
+        val passphrase = inputData.getString("passphrase") ?: return Result.failure()
 
-        val dbHelper = TransactionDatabaseHelper(applicationContext)
+        val dbHelper = AppDatabaseHelper(applicationContext)
+        val db = dbHelper.getWritableDatabase(passphrase.toCharArray())
 
-        return try {
-            val db = dbHelper.getWritableDatabase(passphrase)
-            val transaction = Transaction(puid, name, type, amount)
-            dbHelper.insertTransaction(transaction, passphrase.joinToString(""))
-            db.close()
-            Result.success()
+        try {
+            val contentValues = ContentValues().apply {
+                put("puid", inputData.getString("puid"))
+                put("payee_id", inputData.getInt("payee_id", -1))
+                put("amount", inputData.getDouble("amount", 0.0))
+                put("date", inputData.getString("date"))
+                put("transaction_type", inputData.getString("transaction_type"))
+            }
+            db.insert("transactions", null, contentValues)
         } catch (e: Exception) {
             e.printStackTrace()
-            Result.failure()
+            return Result.failure()
         } finally {
-            dbHelper.closeDatabase(null)
+            db.close()
         }
+
+        return Result.success()
     }
 }

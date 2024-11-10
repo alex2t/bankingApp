@@ -12,6 +12,9 @@ import net.sqlcipher.database.SQLiteDatabase
 import com.example.atm_osphere.model.User
 import android.util.Log
 import java.util.UUID
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val passphrase: String) : ViewModel() {
 
@@ -24,19 +27,17 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-    // New flag to indicate login status
     private val _loggedIn = MutableStateFlow(false)
     val loggedIn: StateFlow<Boolean> get() = _loggedIn
+
     init {
         _loggedIn.value = false
     }
-
 
     private var database: SQLiteDatabase? = null
 
     // Sign In Function
     fun signIn(email: String, password: String) {
-
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -79,7 +80,10 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val 
                     return@launch
                 }
 
-                val newUser = User(generateUniqueId(), email, password)
+                // Generate the current date in yyyy-MM-dd format
+                val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                val newUser = User(generateUniqueId(), email, password, date)
+
                 databaseHelper.insertUserInBackground(newUser, passphrase)
 
                 withContext(Dispatchers.Main) {
@@ -114,9 +118,5 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val 
         _statusMessage.value = "" to false
     }
 
-    // Called when ViewModel is about to be destroyed
-    override fun onCleared() {
-        super.onCleared()
-        databaseHelper.closeDatabase(database)
-    }
+
 }
