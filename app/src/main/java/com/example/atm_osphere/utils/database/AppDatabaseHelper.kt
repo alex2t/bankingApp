@@ -27,12 +27,13 @@ class AppDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
 
         // Create payees table with foreign key referencing users
         db.execSQL("""
-            CREATE TABLE IF NOT EXISTS payees (
-                payee_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            CREATE TABLE IF NOT EXISTS Payee (
+                payeeId INTEGER PRIMARY KEY AUTOINCREMENT,
                 puid TEXT NOT NULL,
                 name TEXT,
                 country TEXT,
                 iban TEXT UNIQUE,
+                isDefault INTEGER DEFAULT 0,  -- New column for isDefault, defaulting to 0 (false)
                 FOREIGN KEY (puid) REFERENCES users(permanent_user_id) ON DELETE CASCADE
             )
         """)

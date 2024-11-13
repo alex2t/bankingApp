@@ -5,5 +5,6 @@ data class Payee(
     val puid: String,                // Foreign key linking to User
     val name: String,
     val country: String,
-    val iban: String                 // Unique IBAN for each payee
+    val iban: String ,
+    val isDefault: Boolean = false// Unique IBAN for each payee
 )

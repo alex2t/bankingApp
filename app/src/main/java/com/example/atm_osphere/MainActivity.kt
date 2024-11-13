@@ -11,6 +11,8 @@ import com.example.atm_osphere.view.navigation.NavigationSetup
 import com.example.atm_osphere.viewmodels.auth.AuthViewModel
 import com.example.atm_osphere.viewmodels.auth.AuthViewModelFactory
 import com.example.atm_osphere.utils.database.UserDatabaseHelper
+import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
+import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
 import java.util.UUID
 
 class MainActivity : ComponentActivity() {
@@ -25,7 +27,12 @@ class MainActivity : ComponentActivity() {
             // Initialize AuthViewModel using ViewModelProvider
             val authViewModel = ViewModelProvider(
                 this,
-                AuthViewModelFactory(UserDatabaseHelper(this), "your-secure-passphrase")
+                AuthViewModelFactory(
+                    UserDatabaseHelper(this),
+                    PayeeDatabaseHelper(this),
+                    TransactionDatabaseHelper(this),
+                    "your-secure-passphrase"
+                )
             ).get(AuthViewModel::class.java)
             // Set up navigation for both pre-login and post-login
             NavigationSetup(

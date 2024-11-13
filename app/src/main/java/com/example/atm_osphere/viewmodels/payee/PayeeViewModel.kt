@@ -51,7 +51,7 @@ class PayeeViewModel(
         }
     }
 
-    fun addPayee(puid: String, name: String, countryCode: String, iban: String) {
+    fun addPayee(puid: String, name: String, countryCode: String, iban: String, isDefault: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // Prepare input data for the worker
@@ -60,8 +60,11 @@ class PayeeViewModel(
                     .putString("name", name)
                     .putString("country", countryCode)
                     .putString("iban", iban)
+                    .putInt("isDefault", if (isDefault) 1 else 0)
                     .putString("passphrase", passphrase)
                     .build()
+                Log.d("AddPayee", "Data.Builder: puid=$puid, isDefault=${payeeData.getInt("isDefault", -1)}")
+                Log.d("AddPayee", "addPayee: ,${isDefault}")
 
                 // Create and enqueue a work request for PayeeDatabaseWorker
                 val workRequest = OneTimeWorkRequestBuilder<PayeeDatabaseWorker>()

@@ -15,6 +15,7 @@ class PayeeDatabaseWorker(context: Context, workerParams: WorkerParameters) : Wo
         val name = inputData.getString("name") ?: return Result.failure()
         val country = inputData.getString("country") ?: return Result.failure()
         val iban = inputData.getString("iban") ?: return Result.failure()
+        val isDefault = inputData.getInt("isDefault", 0) == 1
 
         // Use AppDatabaseHelper directly to open the database
         val appDatabaseHelper = AppDatabaseHelper(applicationContext)
@@ -22,7 +23,7 @@ class PayeeDatabaseWorker(context: Context, workerParams: WorkerParameters) : Wo
 
         return try {
             val dbHelper = PayeeDatabaseHelper(applicationContext)
-            val payee = Payee(payeeId = null, puid = puid, name = name, country = country, iban = iban) // Create a Payee instance
+            val payee = Payee(payeeId = null, puid = puid, name = name, country = country, iban = iban, isDefault = isDefault) // Create a Payee instance
 
             // Insert the payee using PayeeDatabaseHelper
             val success = dbHelper.insertPayee(puid, payee, passphrase.joinToString(""))

@@ -1,6 +1,9 @@
 package com.example.atm_osphere.viewmodels.auth
 
 import com.example.atm_osphere.utils.database.UserDatabaseHelper
+import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
+import com.example.atm_osphere.model.Payee
+import com.example.atm_osphere.model.Transaction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -11,12 +14,16 @@ import kotlinx.coroutines.withContext
 import net.sqlcipher.database.SQLiteDatabase
 import com.example.atm_osphere.model.User
 import android.util.Log
+import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
 import java.util.UUID
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val passphrase: String) : ViewModel() {
+class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
+                    private val payeeDatabaseHelper: PayeeDatabaseHelper,
+                    private val transactionDatabaseHelper: TransactionDatabaseHelper,
+                    private val passphrase: String) : ViewModel() {
 
     private val _statusMessage = MutableStateFlow<Pair<String?, Boolean>?>(null)
     val statusMessage: StateFlow<Pair<String?, Boolean>?> get() = _statusMessage
@@ -82,9 +89,11 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val 
 
                 // Generate the current date in yyyy-MM-dd format
                 val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                val newUser = User(generateUniqueId(), email, password, date)
+                val puid = generateUniqueId() // Generate unique ID for the new user
+                val newUser = User(puid, email, password, date)
 
                 databaseHelper.insertUserInBackground(newUser, passphrase)
+                initializeDefaultDataForUser(puid, passphrase) // Ensure puid is generated and passed correctly
 
                 withContext(Dispatchers.Main) {
                     _statusMessage.value = "Account created successfully." to true
@@ -98,6 +107,52 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper, private val 
             }
         }
     }
+
+    fun initializeDefaultDataForUser(puid: String, passphrase: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Define default payees
+            val defaultPayees = listOf(
+                //default payee for MaibPage view Transaction set to false to do not show in payee dropdown in Paypayee
+                Payee(null, puid, "Netflix", "US", "US1234567890",false),
+                Payee(null, puid, "Salary", "US", "US0987654321",false),
+                Payee(null, puid, "John Doe", "US", "US1122334455",false),
+                Payee(null, puid, "Gym", "US", "US6677889900",false),
+                Payee(null, puid, "Sponsor", "US", "US5566778899",false),
+                //default payee for make transaction
+                Payee(0, puid, "Frederick Schmidt", "DE", "DE35201202001934568467",true),
+                Payee(0, puid, "Peter Hendrik", "NL", "NL38RABO5198491756",true),
+                Payee(0, puid, "Pat Murphy", "IE", "IE85BOFI900017779245",true)
+            )
+
+            // Insert each payee using PayeeDatabaseHelper
+            defaultPayees.forEach { payee ->
+                payeeDatabaseHelper.insertPayee(puid,payee, passphrase)
+            }
+
+            // Retrieve payee IDs using the helper
+            val netflixPayeeId = payeeDatabaseHelper.getPayeeIdByName("Netflix", passphrase)
+            val salaryPayeeId = payeeDatabaseHelper.getPayeeIdByName("Salary", passphrase)
+            val johnDoePayeeId = payeeDatabaseHelper.getPayeeIdByName("John Doe", passphrase)
+            val gymPayeeId = payeeDatabaseHelper.getPayeeIdByName("Gym", passphrase)
+            val sponsorPayeeId = payeeDatabaseHelper.getPayeeIdByName("Sponsor", passphrase)
+
+            // Define default transactions
+            val defaultTransactions = listOf(
+                Transaction(null, puid, netflixPayeeId ?: -1, 25.00, "2024-01-01", "debit"),
+                Transaction(null, puid, salaryPayeeId ?: -1, 5000.00, "2024-01-02", "credit"),
+                Transaction(null, puid, johnDoePayeeId ?: -1, 500.00, "2024-01-03", "credit"),
+                Transaction(null, puid, gymPayeeId ?: -1, 20.00, "2024-01-03", "debit"),
+                Transaction(null, puid, sponsorPayeeId ?: -1, 70.00, "2024-01-05", "credit")
+            )
+
+            // Insert transactions using a function within your database helper
+            defaultTransactions.forEach { transaction ->
+                transactionDatabaseHelper.insertTransactionInBackground(transaction, passphrase)
+            }
+        }
+    }
+
+
 
     // Logout Function
     fun logout() {

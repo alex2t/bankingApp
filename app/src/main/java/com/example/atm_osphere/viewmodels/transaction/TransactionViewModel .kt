@@ -44,17 +44,6 @@ class TransactionViewModel(
                 var transactions = databaseHelper.getTransactionsWithPayeeName(puid, passphrase.joinToString(""))
                 Log.d("TransactionViewModel", "Fetched ${transactions.size} transactions")
 
-                if (transactions.isEmpty()) {
-                    // If no transactions are found, insert default transactions
-                    Log.d("TransactionViewModel", "No transactions found. Inserting defaults.")
-                    databaseHelper.insertDefaultTransactionsForPuid(puid, passphrase.joinToString(""))
-
-                    // Re-fetch the transactions after inserting default ones
-                    transactions = databaseHelper.getTransactionsWithPayeeName(puid, passphrase.joinToString(""))
-                    Log.d("TransactionViewModel", "Fetching transactions for PUID: $puid")
-                    Log.d("TransactionViewModel", "Re-fetched ${transactions.size} transactions after inserting defaults.")
-                }
-
                 // Update StateFlow with the fetched transactions
                 withContext(Dispatchers.Main) {
                     _transactions.value = transactions // Update StateFlow
@@ -69,7 +58,7 @@ class TransactionViewModel(
         }
     }
 
-    // Function to insert a transaction using WorkManager
+    // Function to insert a transaction using WorkManager for new transaction
     fun insertTransactionInBackground(transaction: Transaction) {
         _loading.value = true
         viewModelScope.launch(Dispatchers.IO) {
@@ -110,6 +99,7 @@ class TransactionViewModel(
             }
         }
     }
+
 
     fun clearTransactionStatus() {
         _transactionStatus.value = null

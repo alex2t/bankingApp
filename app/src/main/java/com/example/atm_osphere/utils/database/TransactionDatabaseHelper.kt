@@ -19,12 +19,19 @@ class TransactionDatabaseHelper(private val context: Context)  {
         val transactionsWithPayees = mutableListOf<TransactionWithPayee>()
 
         val query = """
-        SELECT transactions.transaction_id, transactions.payee_id, transactions.amount, transactions.date, transactions.transaction_type,
-               payees.name AS payee_name
-        FROM transactions
-        INNER JOIN payees ON transactions.payee_id = payees.payee_id
-        WHERE transactions.puid = ?
+        SELECT  transactions.transaction_id, 
+                transactions.payee_id, 
+                transactions.amount, 
+                transactions.date, 
+                transactions.transaction_type,
+                Payee.name AS payee_name
+                FROM transactions
+                INNER JOIN Payee ON transactions.payee_id = Payee.payeeId
+                WHERE transactions.puid = ? 
     """.trimIndent()
+
+
+        Log.d("DatabaseQuery", "Executing query: $query")
 
         var cursor: Cursor? = null
         try {
@@ -78,38 +85,24 @@ class TransactionDatabaseHelper(private val context: Context)  {
     }
 
 
-    // Insert default transactions for a given puid
-    fun insertDefaultTransactionsForPuid(puid: String, passphrase: String) {
-        val defaultTransactions = listOf(
-            Transaction(null, puid, 1, 25.00, "2024-01-01", "debit"),
-            Transaction(null, puid, 2, 5000.00, "2024-01-02", "credit"),
-            Transaction(null, puid, 3, 500.00, "2024-01-03", "credit")
-        )
 
+    // Background transaction insertion using WorkManager
+    fun insertTransactionInBackground(transaction: Transaction, passphrase: String) {
+        val inputData = Data.Builder()
+            .putString("puid", transaction.puid)
+            .putInt("payee_id", transaction.payeeId)
+            .putDouble("amount", transaction.amount)
+            .putString("date", transaction.date)
+            .putString("transaction_type", transaction.transactionType)
+            .putString("passphrase", passphrase)
+            .build()
 
-        val db = appDatabaseHelper.getWritableDatabase(passphrase.toCharArray())
-        db.beginTransaction()
-        try {
-            for (transaction in defaultTransactions) {
-                val contentValues = ContentValues().apply {
-                    put("puid", transaction.puid)
-                    put("payee_id", transaction.payeeId)
-                    put("amount", transaction.amount)
-                    put("date", transaction.date)
-                    put("transaction_type", transaction.transactionType)
-                }
-                db.insert("transactions", null, contentValues)
-            }
-            db.setTransactionSuccessful()
-            Log.d("TransactionDatabaseHelper", "Inserted ${defaultTransactions.size} transactions for puid: $puid")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            db.endTransaction()
-            db.close()
-        }
+        val workRequest = OneTimeWorkRequestBuilder<TransactionDatabaseWorker>()
+            .setInputData(inputData)
+            .build()
+
+        WorkManager.getInstance(context).enqueue(workRequest)
     }
-
     // Safely close the database if open
     fun closeDatabase(db: SQLiteDatabase?) {
         db?.let {
