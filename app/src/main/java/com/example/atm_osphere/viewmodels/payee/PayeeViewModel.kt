@@ -16,15 +16,13 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.atm_osphere.utils.workers.PayeeDatabaseWorker
 import androidx.work.Data
-import android.content.Context
 import androidx.work.WorkInfo
 import kotlinx.coroutines.withContext
 
 
 class PayeeViewModel(
     private val databaseHelper: PayeeDatabaseHelper,
-    private val workManager: WorkManager,
-    private val passphrase: String
+    private val workManager: WorkManager
 ) : ViewModel() {
 
     private val _iban = MutableStateFlow<String?>(null)
@@ -61,7 +59,6 @@ class PayeeViewModel(
                     .putString("country", countryCode)
                     .putString("iban", iban)
                     .putInt("isDefault", if (isDefault) 1 else 0)
-                    .putString("passphrase", passphrase)
                     .build()
                 Log.d("AddPayee", "Data.Builder: puid=$puid, isDefault=${payeeData.getInt("isDefault", -1)}")
                 Log.d("AddPayee", "addPayee: ,${isDefault}")
@@ -116,7 +113,7 @@ class PayeeViewModel(
     fun getPayeesByPuid(puid: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val payeesList = databaseHelper.getPayeesByPuid(puid, passphrase)
+                val payeesList = databaseHelper.getPayeesByPuid(puid)
                 _payees.update { payeesList }
                 Log.d("PayeeViewModel", "Fetched ${payeesList.size} payees for puid: $puid")
             } catch (e: Exception) {

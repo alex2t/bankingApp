@@ -47,7 +47,7 @@ fun NavigationSetup(
     val payeeViewModel: PayeeViewModel = viewModel(
         factory = PayeeViewModelFactory(
             context = context,
-            passphrase = "your-secure-passphrase"
+
         )
     )
 

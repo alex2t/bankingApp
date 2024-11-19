@@ -8,3 +8,4 @@ data class Payee(
     val iban: String ,
     val isDefault: Boolean = false// Unique IBAN for each payee
 )
+

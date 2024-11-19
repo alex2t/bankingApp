@@ -73,8 +73,6 @@ dependencies {
     // Lifecycle ViewModel and Compose integration
     implementation(libs.lifecycle.viewmodel.compose)
 
-    // SQLCipher for encrypted database
-    implementation(libs.sqlcipher)
 
     // WorkManager for background tasks
     implementation(libs.work.runtime.ktx)

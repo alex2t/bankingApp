@@ -19,7 +19,7 @@ class TransactionViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TransactionViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return TransactionViewModel(databaseHelper, workManager, passphrase) as T
+            return TransactionViewModel(databaseHelper, workManager) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

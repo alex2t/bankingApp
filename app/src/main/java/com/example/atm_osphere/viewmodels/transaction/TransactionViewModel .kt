@@ -16,14 +16,11 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.atm_osphere.utils.workers.TransactionDatabaseWorker
 import androidx.work.WorkInfo
-import androidx.work.OneTimeWorkRequestBuilder
 
-import android.content.Context
 
 class TransactionViewModel(
     private val databaseHelper: TransactionDatabaseHelper,
-    private val workManager: WorkManager,
-    private val passphrase: CharArray
+    private val workManager: WorkManager
 ) : ViewModel() {
 
     private val _transactions = MutableStateFlow<List<TransactionWithPayee>>(emptyList())
@@ -41,7 +38,7 @@ class TransactionViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // Fetch transactions from the database
-                var transactions = databaseHelper.getTransactionsWithPayeeName(puid, passphrase.joinToString(""))
+                val transactions = databaseHelper.getTransactionsWithPayeeName(puid)
                 Log.d("TransactionViewModel", "Fetched ${transactions.size} transactions")
 
                 // Update StateFlow with the fetched transactions
@@ -69,7 +66,7 @@ class TransactionViewModel(
                     .putDouble("amount", transaction.amount)
                     .putString("date", transaction.date)
                     .putString("transaction_type", transaction.transactionType)
-                    .putString("passphrase", passphrase.joinToString(""))
+                    //.putString("passphrase", passphrase.joinToString(""))
                     .build()
 
                 val workRequest = OneTimeWorkRequestBuilder<TransactionDatabaseWorker>()

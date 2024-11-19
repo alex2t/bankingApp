@@ -12,18 +12,18 @@ import java.util.Locale
 class UserDatabaseWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
     override fun doWork(): Result {
-        // Retrieve input data (e.g., user details and passphrase)
+        // Retrieve input data (e.g., user details and )
         val userId = inputData.getString("userId") ?: return Result.failure()
         val email = inputData.getString("email") ?: return Result.failure()
         val password = inputData.getString("password") ?: return Result.failure()
-        val passphrase = inputData.getString("passphrase") ?: return Result.failure()
+
 
         val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         val user = User(userId, email, password, date = currentDate)
 
         // Use AppDatabaseHelper to interact with the unified database
         val dbHelper = AppDatabaseHelper(applicationContext)
-        val db = dbHelper.getEncryptedWritableDatabase(passphrase.toCharArray())
+        val db = dbHelper.writableDatabase
 
         // Insert the user into the users table
         val insertSQL = "INSERT INTO users (permanent_user_id, email, password, date) VALUES (?, ?, ?, ?)"

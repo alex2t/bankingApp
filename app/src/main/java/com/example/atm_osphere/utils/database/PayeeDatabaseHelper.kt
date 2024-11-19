@@ -5,19 +5,17 @@ import android.content.Context
 import android.database.Cursor
 import android.util.Log
 import com.example.atm_osphere.model.Payee
-import net.sqlcipher.database.SQLiteDatabase
-import com.example.atm_osphere.utils.database.AppDatabaseHelper
-import net.sqlcipher.database.SQLiteOpenHelper
+import android.database.sqlite.SQLiteDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class PayeeDatabaseHelper(private val context: Context)  {
+class PayeeDatabaseHelper( context: Context)  {
 
     private val appDatabaseHelper = AppDatabaseHelper(context)
 
     // Retrieve payees for a specific PUID, creating the table if it doesn't exist
-    fun getPayeesByPuid(puid: String, passphrase: String): List<Payee> {
-        val db = appDatabaseHelper.getReadableDatabase(passphrase.toCharArray())
+    fun getPayeesByPuid(puid: String): List<Payee> {
+        val db = appDatabaseHelper.readableDb
         val payees = mutableListOf<Payee>()
         var cursor: Cursor? = null
 
@@ -27,7 +25,7 @@ class PayeeDatabaseHelper(private val context: Context)  {
                 "Payee",
                 null,
                 "puid = ? AND IsDefault = ?" ,
-                arrayOf(puid,"1",),
+                arrayOf(puid,"1"),
                 null,
                 null,
                 null
@@ -56,57 +54,53 @@ class PayeeDatabaseHelper(private val context: Context)  {
 
 
     // Insert default payee from authviewmodel and from AddPayee via it viewModel and worker
-    fun insertPayee(puid: String, payee: Payee, passphrase: String): Boolean {
-        val db = appDatabaseHelper.getWritableDatabase(passphrase.toCharArray())
+    fun insertPayee(puid: String, payee: Payee): Boolean {
+        val db = appDatabaseHelper.writableDb
         return try {
-            // Prepare content values for insertion
             val values = ContentValues().apply {
-                put("puid", puid)                // Link payee to user by puid
-                put("name", payee.name)           // Payee's name
-                put("country", payee.country)     // Payee's country
-                put("iban", payee.iban)           // Payee's IBAN
+                put("puid", puid)
+                put("name", payee.name)
+                put("country", payee.country)
+                put("iban", payee.iban)
                 put("isDefault", if (payee.isDefault) 1 else 0)
             }
+            Log.d("PayeeDatabaseHelper", "Insert called with: puid=${payee.puid}, name=${payee.name}, iban=${payee.iban} isDefault=${payee.isDefault}")
 
-
-            // Insert the values into the payees table and check for success
-            val success = db.insert("Payee", null, values) != -1L
-            if (success) {
-                Log.d("PayeeDatabaseHelper", "Payee inserted successfully: ${payee.name}")
-            } else {
-                Log.e("PayeeDatabaseHelper", "Failed to insert payee: ${payee.name}")
+            val rowId = db.insert("Payee", null, values) // Directly get row ID
+            if (rowId == -1L) {
+                throw Exception("Insert failed for payee: ${values.getAsString("name")}")
             }
-            success
+
+            Log.d("Database", "Insert successful for payee: ${values.getAsString("name")}, Row ID: $rowId")
+            true // Return true on success
         } catch (e: Exception) {
-            Log.e("PayeeDatabaseHelper", "Error inserting payee: ${payee.name}", e)
-            false  // Return false if there was an exception
+            Log.e("Database", "Error during insert operation", e)
+            false // Return false on failure
         } finally {
-            db.close()  // Close the database connection in the finally block
+            db.close() // Always close the database
         }
     }
 
 
-
-
     // function call from the authviewModel
-    suspend fun getPayeeIdByName(name: String, passphrase: String): Int? = withContext(Dispatchers.IO) {
-        Log.d("PayeeDatabaseHelper", "getPayeeIdByName called with name: $name")
+    suspend fun getPayeeIdByName(name: String): Int? = withContext(Dispatchers.IO) {
+        Log.d("getPayeeIdByName", "getPayeeIdByName called with name: $name")
         var payeeId: Int? = null
 
         try {
-            val db = appDatabaseHelper.getReadableDatabase(passphrase.toCharArray())
+            val db = appDatabaseHelper.readableDb
             val cursor = db.rawQuery("SELECT payeeId FROM Payee WHERE name = ?", arrayOf(name))
 
             cursor.use {
                 if (it.moveToFirst()) {
                     payeeId = it.getInt(0)
-                    Log.d("PayeeDatabaseHelper", "Payee ID found: $payeeId")
+                    Log.d("getPayeeIdByName", "Payee ID found: $payeeId")
                 } else {
-                    Log.d("PayeeDatabaseHelper", "No Payee found with name: $name")
+                    Log.d("getPayeeIdByName", "No Payee found with name: $name")
                 }
             }
         } catch (e: Exception) {
-            Log.e("PayeeDatabaseHelper", "Error querying Payee ID by name: $name", e)
+            Log.e("getPayeeIdByName", "Error querying Payee ID by name: $name", e)
         }
 
         payeeId

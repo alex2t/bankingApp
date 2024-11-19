@@ -10,7 +10,7 @@ import android.content.Context
 
 class PayeeViewModelFactory(
     private val context: Context, // Only Context is passed here
-    private val passphrase: String
+
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -18,7 +18,7 @@ class PayeeViewModelFactory(
             val databaseHelper = PayeeDatabaseHelper(context)
             val workManager = WorkManager.getInstance(context) // Initialize WorkManager here
             @Suppress("UNCHECKED_CAST")
-            return PayeeViewModel(databaseHelper, workManager, passphrase) as T
+            return PayeeViewModel(databaseHelper, workManager) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -47,13 +47,26 @@ fun TransactionItem(transaction: TransactionWithPayee) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
-                Text(
-                    text = transaction.transactionType.replaceFirstChar
-                    { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = transactionColor,
-                    fontSize = 14.sp
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+
+                ) {
+                    Text(
+                        text = transaction.transactionType.replaceFirstChar
+                        { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = transactionColor,
+                        fontSize = 14.sp ,
+                        //modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text =  transaction.date,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+
+
+                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))

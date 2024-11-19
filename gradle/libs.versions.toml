@@ -58,8 +58,7 @@ compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime
 # Material3
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "composeMaterial3" }
 
-# SQLCipher for encrypted database
-sqlcipher = { group = "net.zetetic", name = "android-database-sqlcipher", version = "4.5.0" }
+
 
 # Jetpack Compose Tooling (for previews and testing)
 compose-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }

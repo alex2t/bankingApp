@@ -9,10 +9,10 @@ import com.example.atm_osphere.utils.database.AppDatabaseHelper
 class TransactionDatabaseWorker (context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
 
     override fun doWork(): Result {
-        val passphrase = inputData.getString("passphrase") ?: return Result.failure()
+
 
         val dbHelper = AppDatabaseHelper(applicationContext)
-        val db = dbHelper.getWritableDatabase(passphrase.toCharArray())
+        val db = dbHelper.writableDb
 
         try {
             val contentValues = ContentValues().apply {

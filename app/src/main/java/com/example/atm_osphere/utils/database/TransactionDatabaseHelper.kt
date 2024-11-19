@@ -1,10 +1,9 @@
 package com.example.atm_osphere.utils.database
 
-import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import androidx.work.WorkManager
-import net.sqlcipher.database.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabase
 import com.example.atm_osphere.model.Transaction
 import android.util.Log
 import androidx.work.Data
@@ -14,8 +13,8 @@ import com.example.atm_osphere.utils.workers.TransactionDatabaseWorker
 class TransactionDatabaseHelper(private val context: Context)  {
     private val appDatabaseHelper = AppDatabaseHelper(context)
 
-    fun getTransactionsWithPayeeName(puid: String, passphrase: String): List<TransactionWithPayee> {
-        val db = appDatabaseHelper.getReadableDatabase(passphrase.toCharArray())
+    fun getTransactionsWithPayeeName(puid: String): List<TransactionWithPayee> {
+        val db = appDatabaseHelper.readableDb
         val transactionsWithPayees = mutableListOf<TransactionWithPayee>()
 
         val query = """
@@ -28,6 +27,7 @@ class TransactionDatabaseHelper(private val context: Context)  {
                 FROM transactions
                 INNER JOIN Payee ON transactions.payee_id = Payee.payeeId
                 WHERE transactions.puid = ? 
+                ORDER BY transactions.date DESC
     """.trimIndent()
 
 
@@ -84,19 +84,16 @@ class TransactionDatabaseHelper(private val context: Context)  {
         return transactionsWithPayees
     }
 
-
-
     // Background transaction insertion using WorkManager
-    fun insertTransactionInBackground(transaction: Transaction, passphrase: String) {
+    fun insertTransactionInBackground(transaction: Transaction) {
         val inputData = Data.Builder()
             .putString("puid", transaction.puid)
             .putInt("payee_id", transaction.payeeId)
             .putDouble("amount", transaction.amount)
             .putString("date", transaction.date)
             .putString("transaction_type", transaction.transactionType)
-            .putString("passphrase", passphrase)
             .build()
-
+        Log.d("insertTransactionInBackground", "puid:${transaction.puid} payee_id:${transaction.payeeId} amount:${transaction.amount} date:${transaction.date}  transaction_type:${transaction.transactionType}")
         val workRequest = OneTimeWorkRequestBuilder<TransactionDatabaseWorker>()
             .setInputData(inputData)
             .build()

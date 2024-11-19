@@ -11,10 +11,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.sqlcipher.database.SQLiteDatabase
 import com.example.atm_osphere.model.User
 import android.util.Log
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
+import com.example.atm_osphere.utils.workers.PayeeDatabaseWorker
 import java.util.UUID
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -23,7 +27,7 @@ import java.util.Locale
 class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
                     private val payeeDatabaseHelper: PayeeDatabaseHelper,
                     private val transactionDatabaseHelper: TransactionDatabaseHelper,
-                    private val passphrase: String) : ViewModel() {
+                    private val workManager: WorkManager ) : ViewModel() {
 
     private val _statusMessage = MutableStateFlow<Pair<String?, Boolean>?>(null)
     val statusMessage: StateFlow<Pair<String?, Boolean>?> get() = _statusMessage
@@ -41,14 +45,13 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
         _loggedIn.value = false
     }
 
-    private var database: SQLiteDatabase? = null
 
     // Sign In Function
     fun signIn(email: String, password: String) {
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val user = databaseHelper.getUser(email, passphrase)
+                val user = databaseHelper.getUser(email)
 
                 withContext(Dispatchers.Main) {
                     val statusMessagePair = when {
@@ -78,7 +81,7 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val existingUser = databaseHelper.getUser(email, passphrase)
+                val existingUser = databaseHelper.getUser(email)
 
                 if (existingUser != null) {
                     withContext(Dispatchers.Main) {
@@ -92,8 +95,8 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
                 val puid = generateUniqueId() // Generate unique ID for the new user
                 val newUser = User(puid, email, password, date)
 
-                databaseHelper.insertUserInBackground(newUser, passphrase)
-                initializeDefaultDataForUser(puid, passphrase) // Ensure puid is generated and passed correctly
+                databaseHelper.insertUserInBackground(newUser)
+                initializeDefaultDataForUser(puid) // Ensure puid is generated and passed correctly
 
                 withContext(Dispatchers.Main) {
                     _statusMessage.value = "Account created successfully." to true
@@ -107,51 +110,111 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
             }
         }
     }
+    private fun Payee.toWorkData(): Data {
+        return Data.Builder()
+            .putString("puid", puid)
+            .putString("name", name)
+            .putString("country", country)
+            .putString("iban", iban)
+            .putInt("isDefault", if (isDefault) 1 else 0)
+            .build()
+    }
+    private fun initializeDefaultDataForUser(puid: String) {
+        if (puid.isBlank()) {
+            Log.e("AuthViewModel", "puid is blank. Cannot initialize default data.")
+            return
+        }
+        Log.d("AuthViewModel", "puid: $puid")
 
-    fun initializeDefaultDataForUser(puid: String, passphrase: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            // Define default payees
-            val defaultPayees = listOf(
-                //default payee for MaibPage view Transaction set to false to do not show in payee dropdown in Paypayee
-                Payee(null, puid, "Netflix", "US", "US1234567890",false),
-                Payee(null, puid, "Salary", "US", "US0987654321",false),
-                Payee(null, puid, "John Doe", "US", "US1122334455",false),
-                Payee(null, puid, "Gym", "US", "US6677889900",false),
-                Payee(null, puid, "Sponsor", "US", "US5566778899",false),
-                //default payee for make transaction
-                Payee(0, puid, "Frederick Schmidt", "DE", "DE35201202001934568467",true),
-                Payee(0, puid, "Peter Hendrik", "NL", "NL38RABO5198491756",true),
-                Payee(0, puid, "Pat Murphy", "IE", "IE85BOFI900017779245",true)
-            )
+        viewModelScope.launch {
+            try {
+                // Insert default payees and wait for completion
+                insertDefaultPayees(puid)
 
-            // Insert each payee using PayeeDatabaseHelper
-            defaultPayees.forEach { payee ->
-                payeeDatabaseHelper.insertPayee(puid,payee, passphrase)
-            }
+                // Once payees are inserted, insert default transactions
+                insertDefaultTransactions(puid)
 
-            // Retrieve payee IDs using the helper
-            val netflixPayeeId = payeeDatabaseHelper.getPayeeIdByName("Netflix", passphrase)
-            val salaryPayeeId = payeeDatabaseHelper.getPayeeIdByName("Salary", passphrase)
-            val johnDoePayeeId = payeeDatabaseHelper.getPayeeIdByName("John Doe", passphrase)
-            val gymPayeeId = payeeDatabaseHelper.getPayeeIdByName("Gym", passphrase)
-            val sponsorPayeeId = payeeDatabaseHelper.getPayeeIdByName("Sponsor", passphrase)
-
-            // Define default transactions
-            val defaultTransactions = listOf(
-                Transaction(null, puid, netflixPayeeId ?: -1, 25.00, "2024-01-01", "debit"),
-                Transaction(null, puid, salaryPayeeId ?: -1, 5000.00, "2024-01-02", "credit"),
-                Transaction(null, puid, johnDoePayeeId ?: -1, 500.00, "2024-01-03", "credit"),
-                Transaction(null, puid, gymPayeeId ?: -1, 20.00, "2024-01-03", "debit"),
-                Transaction(null, puid, sponsorPayeeId ?: -1, 70.00, "2024-01-05", "credit")
-            )
-
-            // Insert transactions using a function within your database helper
-            defaultTransactions.forEach { transaction ->
-                transactionDatabaseHelper.insertTransactionInBackground(transaction, passphrase)
+                Log.d("AuthViewModel", "Default data initialized successfully for puid: $puid")
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error initializing default data for user: $e")
             }
         }
     }
 
+    private suspend fun insertDefaultPayees(puid: String) {
+        withContext(Dispatchers.IO) {
+            val defaultPayees = listOf(
+                Payee(null, puid, "Netflix", "US", "US1234567890", false),
+                Payee(null, puid, "Salary", "US", "US0987654321", false),
+                Payee(null, puid, "John Doe", "US", "US1122334455", false),
+                Payee(null, puid, "Gym", "US", "US6677889900", false),
+                Payee(null, puid, "Sponsor", "US", "US5566778899", false),
+                Payee(null, puid, "Frederick Schmidt", "DE", "DE35201202001934568467", true),
+                Payee(null, puid, "Peter Hendrik", "NL", "NL38RABO5198491756", true),
+                Payee(null, puid, "Pat Murphy", "IE", "IE85BOFI900017779245", true)
+            )
+
+            // Track WorkRequest IDs for all payees
+            val workRequests = defaultPayees.map { payee ->
+                OneTimeWorkRequestBuilder<PayeeDatabaseWorker>()
+                    .setInputData(payee.toWorkData())
+                    .build()
+            }
+
+            // Enqueue all work requests
+            workRequests.forEach { workManager.enqueue(it) }
+
+            // Wait for all work requests to complete
+            workRequests.forEach { workRequest ->
+                var workInfo: WorkInfo
+                do {
+                    workInfo = workManager.getWorkInfoById(workRequest.id).get()
+                } while (!workInfo.state.isFinished)
+
+                if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                    Log.d("AuthViewModel", "Payee insertion succeeded for WorkRequest: ${workRequest.id}")
+                } else {
+                    Log.e("AuthViewModel", "Payee insertion failed for WorkRequest: ${workRequest.id}")
+                }
+            }
+        }
+    }
+
+
+
+
+    private suspend fun insertDefaultTransactions(puid: String) {
+        withContext(Dispatchers.IO) {
+            // Fetch Payee IDs
+            val payeeIds = mapOf(
+                "Netflix" to payeeDatabaseHelper.getPayeeIdByName("Netflix"),
+                "Salary" to payeeDatabaseHelper.getPayeeIdByName("Salary"),
+                "John Doe" to payeeDatabaseHelper.getPayeeIdByName("John Doe"),
+                "Gym" to payeeDatabaseHelper.getPayeeIdByName("Gym"),
+                "Sponsor" to payeeDatabaseHelper.getPayeeIdByName("Sponsor")
+            )
+
+            Log.d("AuthViewModel", "Payee IDs fetched: $payeeIds")
+
+            // Define default transactions
+            val defaultTransactions = listOf(
+                Transaction(null, puid, payeeIds["Netflix"] ?: -1, 25.00, "2024-01-01", "debit"),
+                Transaction(null, puid, payeeIds["Salary"] ?: -1, 5000.00, "2024-01-02", "credit"),
+                Transaction(null, puid, payeeIds["John Doe"] ?: -1, 500.00, "2024-01-03", "credit"),
+                Transaction(null, puid, payeeIds["Gym"] ?: -1, 20.00, "2024-01-03", "debit"),
+                Transaction(null, puid, payeeIds["Sponsor"] ?: -1, 70.00, "2024-01-05", "credit")
+            )
+
+            defaultTransactions.forEach { transaction ->
+                try {
+                    transactionDatabaseHelper.insertTransactionInBackground(transaction)
+                    Log.d("AuthViewModel", "Transaction inserted: $transaction")
+                } catch (e: Exception) {
+                    Log.e("AuthViewModel", "Error inserting transaction: $transaction, error: $e")
+                }
+            }
+        }
+    }
 
 
     // Logout Function

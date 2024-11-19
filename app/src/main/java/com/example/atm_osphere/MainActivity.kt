@@ -7,17 +7,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
+import androidx.work.WorkManager
 import com.example.atm_osphere.view.navigation.NavigationSetup
 import com.example.atm_osphere.viewmodels.auth.AuthViewModel
 import com.example.atm_osphere.viewmodels.auth.AuthViewModelFactory
 import com.example.atm_osphere.utils.database.UserDatabaseHelper
 import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
+import com.example.atm_osphere.utils.openDatabase
+
 import java.util.UUID
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Open the database for Debugging via Database Inspector
+
+        openDatabase(this)
 
         setContent {
             val navController = rememberNavController()
@@ -31,7 +38,7 @@ class MainActivity : ComponentActivity() {
                     UserDatabaseHelper(this),
                     PayeeDatabaseHelper(this),
                     TransactionDatabaseHelper(this),
-                    "your-secure-passphrase"
+                    WorkManager.getInstance(this)
                 )
             ).get(AuthViewModel::class.java)
             // Set up navigation for both pre-login and post-login
