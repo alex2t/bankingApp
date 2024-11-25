@@ -57,6 +57,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.okhttp)
 
     // Compose runtime livedata
     implementation(libs.compose.runtime.livedata)
@@ -72,6 +75,7 @@ dependencies {
 
     // Lifecycle ViewModel and Compose integration
     implementation(libs.lifecycle.viewmodel.compose)
+
 
 
     // WorkManager for background tasks

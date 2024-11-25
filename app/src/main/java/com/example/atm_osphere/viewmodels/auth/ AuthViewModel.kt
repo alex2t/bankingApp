@@ -19,6 +19,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
 import com.example.atm_osphere.utils.workers.PayeeDatabaseWorker
+import com.example.atm_osphere.utils.OutputManager
 import java.util.UUID
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -41,9 +42,11 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
     private val _loggedIn = MutableStateFlow(false)
     val loggedIn: StateFlow<Boolean> get() = _loggedIn
 
-    init {
-        _loggedIn.value = false
-    }
+
+            init {
+                _loggedIn.value = false
+                OutputManager.resetOutput()
+             }
 
 
     // Sign In Function
@@ -58,8 +61,12 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
                         user == null -> "User not found." to false
                         user.password != password -> "Wrong password." to false
                         else -> {
-                            _puid.value = user.permanentUserId // Set PUID only on sign-in
-                            _loggedIn.value = true // Set loggedIn flag to true
+                            _puid.value = user.permanentUserId
+                            _loggedIn.value = true
+                            viewModelScope.launch {
+                                val (userAgent, remoteIp) = OutputManager.getUserAgentAndRemoteIp()
+                                Log.d("UserAgent", "UserAgent: $userAgent, RemoteIp: $remoteIp ")
+                            }
                             "Successfully signed in!" to true
                         }
                     }
@@ -223,6 +230,9 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
         _puid.value = null // Clear PUID on logout
         _statusMessage.value = null // Reset the status message
         _loggedIn.value = false // Ensure loggedIn is reset
+        //viewModelScope.launch {
+            OutputManager.resetOutput() // reset remoteIP and userAgent
+        //}
         Log.d("AuthViewModel", "Logout called: PUID cleared and loggedIn set to false.")
     }
 
