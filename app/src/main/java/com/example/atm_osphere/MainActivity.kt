@@ -15,15 +15,14 @@ import com.example.atm_osphere.viewmodels.auth.AuthViewModelFactory
 import com.example.atm_osphere.utils.database.UserDatabaseHelper
 import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
+import com.example.atm_osphere.utils.api.ApiFactory
+import com.example.atm_osphere.utils.api.ApiHelper
 import com.example.atm_osphere.utils.openDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 
 import androidx.lifecycle.LifecycleOwner
@@ -58,15 +57,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-
         // Start observing lifecycle changes
         setupLifecycleObserver()
-
         setContent {
              navController = rememberNavController()
             val sessionId = remember { mutableStateOf(UUID.randomUUID().toString()) }
             var puid = remember { mutableStateOf<String?>(null) }
+
+            // Instantiate ApiFactory and ApiHelper
+            val apiFactory = ApiFactory()
+            val apiHelper = ApiHelper(apiFactory)
 
             // Initialize AuthViewModel using ViewModelProvider
              authViewModel = ViewModelProvider(
@@ -75,7 +75,8 @@ class MainActivity : ComponentActivity() {
                     UserDatabaseHelper(this),
                     PayeeDatabaseHelper(this),
                     TransactionDatabaseHelper(this),
-                    WorkManager.getInstance(this)
+                    WorkManager.getInstance(this),
+                    apiHelper
                 )
             ).get(AuthViewModel::class.java)
             // Set up navigation for both pre-login and post-login

@@ -72,9 +72,7 @@ class TransactionViewModel(
                 val workRequest = OneTimeWorkRequestBuilder<TransactionDatabaseWorker>()
                     .setInputData(inputData)
                     .build()
-
                 workManager.enqueue(workRequest)
-
                 // Switch to the main thread to observe the work result
                 withContext(Dispatchers.Main) {
                     workManager.getWorkInfoByIdLiveData(workRequest.id)
@@ -96,8 +94,6 @@ class TransactionViewModel(
             }
         }
     }
-
-
     fun clearTransactionStatus() {
         _transactionStatus.value = null
     }

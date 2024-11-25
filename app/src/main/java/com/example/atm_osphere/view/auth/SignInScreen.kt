@@ -72,7 +72,7 @@ fun SignInScreen(viewModel: AuthViewModel, navController: NavController, session
                 onClick = {
                     focusManager.clearFocus()
                     if (email.isNotBlank() && password.isNotBlank()) {
-                        viewModel.signIn(email, password)
+                        viewModel.signIn(email, password, sessionId)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

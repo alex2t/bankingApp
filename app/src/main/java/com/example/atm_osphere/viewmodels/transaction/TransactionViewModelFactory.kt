@@ -10,8 +10,7 @@ import androidx.work.WorkManager
 
 class TransactionViewModelFactory(
     private val databaseHelper: TransactionDatabaseHelper,
-    context: Context, // Receive context here
-    private val passphrase: CharArray
+    context: Context,
 ) : ViewModelProvider.Factory {
 
     private val workManager = WorkManager.getInstance(context) // Initialize WorkManager here

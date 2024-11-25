@@ -25,10 +25,8 @@ fun MainPage(
     viewModel: TransactionViewModel,
     authViewModel: AuthViewModel
 ) {
-    //var transactions by remember { mutableStateOf(emptyList<Transaction>()) }
     var transactions by remember { mutableStateOf<List<TransactionWithPayee>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
-
 
     LaunchedEffect(puid) {
         viewModel.fetchTransactions(puid)  // Fetch transactions with the payee name included
@@ -80,12 +78,10 @@ fun MainPage(
                                 }
                             }
                         }
-
                         else -> {
                             Text("No transactions found", modifier = Modifier.padding(16.dp))
                         }
                     }
-
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()

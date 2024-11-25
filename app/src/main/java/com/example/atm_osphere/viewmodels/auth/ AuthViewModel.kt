@@ -20,6 +20,7 @@ import androidx.work.WorkManager
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
 import com.example.atm_osphere.utils.workers.PayeeDatabaseWorker
 import com.example.atm_osphere.utils.OutputManager
+import com.example.atm_osphere.utils.api.ApiHelper
 import java.util.UUID
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -28,7 +29,8 @@ import java.util.Locale
 class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
                     private val payeeDatabaseHelper: PayeeDatabaseHelper,
                     private val transactionDatabaseHelper: TransactionDatabaseHelper,
-                    private val workManager: WorkManager ) : ViewModel() {
+                    private val workManager: WorkManager,
+                    private val apiHelper: ApiHelper) : ViewModel() {
 
     private val _statusMessage = MutableStateFlow<Pair<String?, Boolean>?>(null)
     val statusMessage: StateFlow<Pair<String?, Boolean>?> get() = _statusMessage
@@ -45,12 +47,11 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
 
             init {
                 _loggedIn.value = false
-                OutputManager.resetOutput()
              }
 
 
     // Sign In Function
-    fun signIn(email: String, password: String) {
+    fun signIn(email: String, password: String, sessionId: String) {
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -63,9 +64,12 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
                         else -> {
                             _puid.value = user.permanentUserId
                             _loggedIn.value = true
-                            viewModelScope.launch {
-                                val (userAgent, remoteIp) = OutputManager.getUserAgentAndRemoteIp()
-                                Log.d("UserAgent", "UserAgent: $userAgent, RemoteIp: $remoteIp ")
+                            val (userAgent, remoteIp) = OutputManager.getUserAgentAndRemoteIp()
+
+                            try {
+                                loginCall(sessionId, puid.value ?: "", userAgent, remoteIp)
+                            } catch (e: Exception) {
+                                Log.e("AuthViewModel", "Error in loginCall: ${e.localizedMessage}")
                             }
                             "Successfully signed in!" to true
                         }
@@ -81,7 +85,15 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
             }
         }
     }
-
+    // function to send data to the server
+    private suspend fun loginCall(sessionId:String , puid: String, userAgent: String, remoteIp: String ) {
+        try {
+            val response = apiHelper.login(sessionId, puid, userAgent, remoteIp)
+            Log.d("AuthViewModel", "response: $response")
+        } catch (e: Exception) {
+            Log.e("AuthViewModel", "errorLoginCall: ${e.message}")
+        }
+    }
     // Create Account Function
     fun createAccount(email: String, password: String) {
         _puid.value = null
@@ -137,10 +149,8 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
             try {
                 // Insert default payees and wait for completion
                 insertDefaultPayees(puid)
-
                 // Once payees are inserted, insert default transactions
                 insertDefaultTransactions(puid)
-
                 Log.d("AuthViewModel", "Default data initialized successfully for puid: $puid")
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Error initializing default data for user: $e")
@@ -187,9 +197,6 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
         }
     }
 
-
-
-
     private suspend fun insertDefaultTransactions(puid: String) {
         withContext(Dispatchers.IO) {
             // Fetch Payee IDs
@@ -230,9 +237,7 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
         _puid.value = null // Clear PUID on logout
         _statusMessage.value = null // Reset the status message
         _loggedIn.value = false // Ensure loggedIn is reset
-        //viewModelScope.launch {
-            OutputManager.resetOutput() // reset remoteIP and userAgent
-        //}
+        OutputManager.resetOutput() // reset remoteIP and userAgent
         Log.d("AuthViewModel", "Logout called: PUID cleared and loggedIn set to false.")
     }
 
@@ -245,6 +250,4 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
     fun clearStatusMessage() {
         _statusMessage.value = "" to false
     }
-
-
 }
