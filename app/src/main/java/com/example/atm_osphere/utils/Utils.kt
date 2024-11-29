@@ -1,5 +1,7 @@
 package com.example.atm_osphere.utils
 
+import com.example.atm_osphere.utils.api.ApiFactory
+import com.example.atm_osphere.utils.api.ApiHelper
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -46,6 +48,7 @@ object OutputManager {
         _remoteIp.value = remoteIpValue ?: "IP not found"
     }
 
+
     suspend fun getUserAgentAndRemoteIp(): Pair<String, String> {
         collectIpAndUserAgent()
         return Pair(userAgent.value, remoteIp.value)
@@ -54,4 +57,9 @@ object OutputManager {
         _userAgent.value = ""
         _remoteIp.value = ""
     }
+}
+
+object ApiProvider {
+    val apiFactory: ApiFactory by lazy { ApiFactory() }
+    val apiHelper: ApiHelper by lazy { ApiHelper(apiFactory) }
 }

@@ -12,8 +12,9 @@ import com.example.atm_osphere.viewmodels.transaction.TransactionViewModel
 import com.example.atm_osphere.viewmodels.payee.PayeeViewModel
 import com.example.atm_osphere.viewmodels.payee.PayeeViewModelFactory
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
-import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
+import com.example.atm_osphere.utils.api.ApiHelper
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.atm_osphere.utils.api.ApiFactory
 import com.example.atm_osphere.view.postLogin.AddPayee
 import com.example.atm_osphere.view.auth.CreateAccountScreen
 import com.example.atm_osphere.view.auth.HomePage
@@ -25,8 +26,9 @@ import com.example.atm_osphere.view.postLogin.PayPayee
 @Composable
 fun NavigationSetup(
     navController: NavHostController,
-    sessionId: String, // Passed from MainActivity
-    authViewModel: AuthViewModel
+    sessionId: String,
+    authViewModel: AuthViewModel,
+    apiHelper: ApiHelper
 ) {
     val context = navController.context
 
@@ -35,19 +37,17 @@ fun NavigationSetup(
     // Log to check if the loggedIn state is correctly updated
     Log.d("NavigationSetup", "loggedIn state: $loggedIn")
 
-
     val transactionViewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModelFactory(
             databaseHelper = TransactionDatabaseHelper(context),
-            context = context,
-            passphrase = "your-secure-passphrase".toCharArray()
+            context = context
         )
     )
 
     val payeeViewModel: PayeeViewModel = viewModel(
         factory = PayeeViewModelFactory(
             context = context,
-
+            apiHelper = apiHelper
         )
     )
 

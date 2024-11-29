@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
@@ -77,7 +78,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
 
 
-
+    implementation(libs.kotlinx.serialization.json)
     // WorkManager for background tasks
     implementation(libs.work.runtime.ktx)
 
@@ -91,7 +92,7 @@ dependencies {
     // Debugging and preview tooling for Compose
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    debugImplementation(libs.compose.tooling)           // Removed duplicate; it should be this reference
+    debugImplementation(libs.compose.tooling)
     debugImplementation(libs.compose.test.manifest)
 
     // LeakCanary for memory leak detection

@@ -2,6 +2,14 @@ package com.example.atm_osphere.utils.api
 
 import org.json.JSONObject
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+
+import kotlinx.serialization.encodeToString
+
+
+
 object PayloadBuilders {
 
     fun buildLoginPayload(sessionId:String , puid: String, userAgent: String, remoteIp: String): String {
@@ -13,14 +21,22 @@ object PayloadBuilders {
         return json.toString()
     }
 
-    fun buildAddPayeePayload(puid: String, name: String, country: String, iban: String): String {
-        val json = JSONObject()
-        json.put("puid", puid)
-        json.put("name", name)
-        json.put("country", country)
-        json.put("iban", iban)
-        return json.toString()
+    fun buildAddPayeePayload(
+        sessionId: String,
+        payeeData: Map<String, Any>,
+        userAgent: String,
+        remoteIp: String
+    ): String {
+        val payloadMap = mapOf(
+            "sessionId" to sessionId,
+            "payeeData" to JsonObject(payeeData.mapValues { JsonPrimitive(it.value.toString()) }),
+            "userAgent" to userAgent,
+            "remoteIp" to remoteIp
+        )
+        return Json.encodeToString(payloadMap)
     }
+
+
 
     fun buildTransactionPayload(puid: String, payeeId: String, amount: Double, type: String): String {
         val json = JSONObject()

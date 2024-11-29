@@ -230,7 +230,7 @@ fun AddPayeeForm(
                 Button(
                     onClick = {
                         iban?.let { nonNullIban ->
-                            payeeViewModel.addPayee(puid, name, selectedCountry, nonNullIban,isDefault = true)
+                            payeeViewModel.addPayee(sessionId,puid, name, selectedCountry, nonNullIban,isDefault = true)
                         }
                     },
                     modifier = Modifier.fillMaxWidth()

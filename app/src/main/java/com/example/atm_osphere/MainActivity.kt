@@ -27,6 +27,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.example.atm_osphere.utils.ApiProvider
 
 import java.util.UUID
 
@@ -65,8 +66,7 @@ class MainActivity : ComponentActivity() {
             var puid = remember { mutableStateOf<String?>(null) }
 
             // Instantiate ApiFactory and ApiHelper
-            val apiFactory = ApiFactory()
-            val apiHelper = ApiHelper(apiFactory)
+            val apiHelper = ApiProvider.apiHelper
 
             // Initialize AuthViewModel using ViewModelProvider
              authViewModel = ViewModelProvider(
@@ -84,6 +84,7 @@ class MainActivity : ComponentActivity() {
                 navController = navController,
                 authViewModel = authViewModel,
                 sessionId = sessionId.value,
+                apiHelper = apiHelper
             )
         }
     }

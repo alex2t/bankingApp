@@ -66,7 +66,6 @@ class TransactionViewModel(
                     .putDouble("amount", transaction.amount)
                     .putString("date", transaction.date)
                     .putString("transaction_type", transaction.transactionType)
-                    //.putString("passphrase", passphrase.joinToString(""))
                     .build()
 
                 val workRequest = OneTimeWorkRequestBuilder<TransactionDatabaseWorker>()

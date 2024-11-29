@@ -1,5 +1,8 @@
 package com.example.atm_osphere.utils.api
 
+import com.example.atm_osphere.model.AddPayeePayload
+import kotlinx.serialization.json.Json
+
 class ApiHelper (private val apiFactory: ApiFactory){
     companion object {
         private const val BASE_URL = "https://atmosphere.free.beeceptor.com"
@@ -12,11 +15,19 @@ class ApiHelper (private val apiFactory: ApiFactory){
         return apiFactory.postRequest(BASE_URL, payload)
     }
 
-    suspend fun addPayee(puid: String, name: String, country: String, iban: String): String {
-        //val endpoint = "addPayee" // Specific endpoint
-        val payload = PayloadBuilders.buildAddPayeePayload(puid, name, country, iban)
-        return apiFactory.postRequest(BASE_URL, payload)
+    suspend fun addPayee(sessionId: String, payeeData: String, userAgent: String, remoteIp: String): String {
+        val payload = AddPayeePayload(
+            sessionId = sessionId,
+            payeeData = Json.decodeFromString(payeeData),
+            userAgent = userAgent,
+            remoteIp = remoteIp
+        )
+
+        // Convert to JSON
+        val jsonPayload = Json.encodeToString(AddPayeePayload.serializer(), payload)
+        return apiFactory.postRequest(BASE_URL, jsonPayload)
     }
+
 
     suspend fun makeTransaction(puid: String, payeeId: String, amount: Double, type: String): String {
         //val endpoint = "transaction" // Specific endpoint

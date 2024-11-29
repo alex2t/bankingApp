@@ -17,7 +17,7 @@ class PayeeDatabaseWorker(context: Context, workerParams: WorkerParameters) : Wo
         val country = inputData.getString("country") ?: return Result.failure()
         val iban = inputData.getString("iban") ?: return Result.failure()
         val isDefault = inputData.getInt("isDefault", 0) == 1
-        Log.d("Payeeworker", ", puid: $puid , name: $name ")
+
 
         // Use AppDatabaseHelper directly to open the database
         val appDatabaseHelper = AppDatabaseHelper(applicationContext)

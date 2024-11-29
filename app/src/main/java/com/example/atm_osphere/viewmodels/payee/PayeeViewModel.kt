@@ -15,14 +15,19 @@ import android.util.Log
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.atm_osphere.utils.workers.PayeeDatabaseWorker
-import androidx.work.Data
+import com.example.atm_osphere.utils.mapToWorkData
 import androidx.work.WorkInfo
 import kotlinx.coroutines.withContext
+import com.example.atm_osphere.utils.api.ApiHelper
+import com.example.atm_osphere.utils.OutputManager
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 
 class PayeeViewModel(
     private val databaseHelper: PayeeDatabaseHelper,
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val apiHelper: ApiHelper
 ) : ViewModel() {
 
     private val _iban = MutableStateFlow<String?>(null)
@@ -49,23 +54,23 @@ class PayeeViewModel(
         }
     }
 
-    fun addPayee(puid: String, name: String, countryCode: String, iban: String, isDefault: Boolean) {
+    fun addPayee(sessionId: String,puid: String, name: String, countryCode: String, iban: String, isDefault: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // Prepare input data for the worker
-                val payeeData = Data.Builder()
-                    .putString("puid", puid)
-                    .putString("name", name)
-                    .putString("country", countryCode)
-                    .putString("iban", iban)
-                    .putInt("isDefault", if (isDefault) 1 else 0)
-                    .build()
-                Log.d("AddPayee", "Data.Builder: puid=$puid, isDefault=${payeeData.getInt("isDefault", -1)}")
-                Log.d("AddPayee", "addPayee: ,${isDefault}")
+                val payeeData = mapOf(
+                    "puid" to puid,
+                    "name" to name,
+                    "country" to countryCode,
+                    "iban" to iban,
+                    "isDefault" to isDefault
+                )
+
+                val workData = mapToWorkData(payeeData)
 
                 // Create and enqueue a work request for PayeeDatabaseWorker
                 val workRequest = OneTimeWorkRequestBuilder<PayeeDatabaseWorker>()
-                    .setInputData(payeeData)
+                    .setInputData(workData)
                     .build()
 
                 // Enqueue the work request using the injected WorkManager instance
@@ -78,6 +83,9 @@ class PayeeViewModel(
                             if (workInfo != null && workInfo.state.isFinished) {
                                 if (workInfo.state == WorkInfo.State.SUCCEEDED) {
                                     _addPayeeStatusMessage.value = "Payee added successfully" to true
+                                    viewModelScope.launch(Dispatchers.IO) {
+                                        apiAddPayee(payeeData, sessionId)
+                                    }
                                 } else {
                                     val errorMessage = workInfo.outputData.getString("error_message")
                                         ?: "An error occurred: Payee was not added"
@@ -98,6 +106,25 @@ class PayeeViewModel(
         }
     }
 
+
+    private suspend fun apiAddPayee(payeeData: Map<String, Any>, sessionId: String) {
+        val (userAgent, remoteIp) = OutputManager.getUserAgentAndRemoteIp()
+
+        try {
+            // Use kotlinx.serialization to convert payeeData
+            val payeePayload = JsonObject(payeeData.mapValues { JsonPrimitive(it.value.toString()) })
+
+            val response = apiHelper.addPayee(
+                sessionId = sessionId,
+                payeeData = payeePayload.toString(),
+                userAgent = userAgent,
+                remoteIp = remoteIp
+            )
+            Log.d("PayeeViewModel", "Response: $response")
+        } catch (e: Exception) {
+            Log.e("PayeeViewModel", "Error calling addPayee API: ${e.message}")
+        }
+    }
 
 
 
