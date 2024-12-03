@@ -15,8 +15,6 @@ import com.example.atm_osphere.viewmodels.auth.AuthViewModelFactory
 import com.example.atm_osphere.utils.database.UserDatabaseHelper
 import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
-import com.example.atm_osphere.utils.api.ApiFactory
-import com.example.atm_osphere.utils.api.ApiHelper
 import com.example.atm_osphere.utils.openDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,22 +61,22 @@ class MainActivity : ComponentActivity() {
         setContent {
              navController = rememberNavController()
             val sessionId = remember { mutableStateOf(UUID.randomUUID().toString()) }
-            var puid = remember { mutableStateOf<String?>(null) }
+            //var puid = remember { mutableStateOf<String?>(null) }
 
             // Instantiate ApiFactory and ApiHelper
             val apiHelper = ApiProvider.apiHelper
 
             // Initialize AuthViewModel using ViewModelProvider
              authViewModel = ViewModelProvider(
-                this,
-                AuthViewModelFactory(
-                    UserDatabaseHelper(this),
-                    PayeeDatabaseHelper(this),
-                    TransactionDatabaseHelper(this),
-                    WorkManager.getInstance(this),
-                    apiHelper
-                )
-            ).get(AuthViewModel::class.java)
+                 this,
+                 AuthViewModelFactory(
+                     UserDatabaseHelper(this),
+                     PayeeDatabaseHelper(this),
+                     TransactionDatabaseHelper(this),
+                     WorkManager.getInstance(this),
+                     apiHelper
+                 )
+             )[AuthViewModel::class.java]
             // Set up navigation for both pre-login and post-login
             NavigationSetup(
                 navController = navController,

@@ -26,7 +26,7 @@ import com.example.atm_osphere.view.postLogin.PayPayee
 @Composable
 fun NavigationSetup(
     navController: NavHostController,
-    sessionId: String,
+    sessionId: String, // The sessionId is passed to routes as part of the NavHost configuration in placeHolder and not
     authViewModel: AuthViewModel,
     apiHelper: ApiHelper
 ) {
@@ -60,30 +60,30 @@ fun NavigationSetup(
         }
 
         composable("signIn/{sessionId}") { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val navSessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             SignInScreen(
                 viewModel = authViewModel,
                 navController = navController,
-                sessionId = sessionId
+                sessionId = navSessionId
             )
         }
 
         composable("createAccount/{sessionId}") { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val navSessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             CreateAccountScreen(
                 viewModel = authViewModel,
                 navController = navController,
-                sessionId = sessionId
+                sessionId = navSessionId
             )
         }
 
         composable("mainpage/{sessionId}/{puid}") { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val navSessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             val puid = backStackEntry.arguments?.getString("puid") ?: ""
             if (loggedIn) {
                 MainPage(
                     navController = navController,
-                    sessionId = sessionId,
+                    sessionId = navSessionId,
                     puid = puid,
                     authViewModel = authViewModel,
                     viewModel = transactionViewModel
@@ -96,11 +96,11 @@ fun NavigationSetup(
         }
 
         composable("payPayee/{sessionId}/{puid}") { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val navSessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             val puid = backStackEntry.arguments?.getString("puid") ?: ""
             PayPayee(
                 navController = navController,
-                sessionId = sessionId,
+                sessionId = navSessionId,
                 puid = puid,
                 authViewModel = authViewModel,
                 payeeViewModel = payeeViewModel,
@@ -109,11 +109,11 @@ fun NavigationSetup(
         }
 
         composable("addpayee/{sessionId}/{puid}") { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val navSessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             val puid = backStackEntry.arguments?.getString("puid") ?: ""
             AddPayee(
                 navController = navController,
-                sessionId = sessionId,
+                sessionId = navSessionId,
                 puid = puid,
                 authViewModel = authViewModel,
                 payeeViewModel = payeeViewModel

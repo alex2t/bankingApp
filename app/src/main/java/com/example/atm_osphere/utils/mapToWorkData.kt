@@ -7,7 +7,7 @@ fun mapToWorkData(input: Map<String, Any>): Data {
         when (value) {
             is String -> builder.putString(key, value)
             is Int -> builder.putInt(key, value)
-            is Boolean -> builder.putBoolean(key, value)
+            is Boolean -> builder.putInt(key, if (value) 1 else 0)
             is Float -> builder.putFloat(key, value)
             is Long -> builder.putLong(key, value)
         }

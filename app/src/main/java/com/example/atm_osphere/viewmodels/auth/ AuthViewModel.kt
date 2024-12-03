@@ -185,7 +185,7 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
             workRequests.forEach { workRequest ->
                 var workInfo: WorkInfo
                 do {
-                    workInfo = workManager.getWorkInfoById(workRequest.id).get()
+                    workInfo = workManager.getWorkInfoById(workRequest.id).get()!!
                 } while (!workInfo.state.isFinished)
 
                 if (workInfo.state == WorkInfo.State.SUCCEEDED) {

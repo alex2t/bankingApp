@@ -1,9 +1,11 @@
 package com.example.atm_osphere.utils.database
 
+import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import androidx.work.WorkManager
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import com.example.atm_osphere.model.Transaction
 import android.util.Log
 import androidx.work.Data
@@ -99,6 +101,38 @@ class TransactionDatabaseHelper(private val context: Context)  {
             .build()
 
         WorkManager.getInstance(context).enqueue(workRequest)
+    }
+    fun deleteTransaction(transactionId: Long): Int {
+        Log.d("TransactionDatabaseHelper", "deleteTransaction: $transactionId")
+        val db = appDatabaseHelper.readableDb
+        return try {
+            val rowsAffected = db.delete("transactions", "transaction_id = ?", arrayOf(transactionId.toString()))
+            if (rowsAffected == 0) {
+                // Log a warning if no rows were affected
+                Log.w("TransactionDatabaseHelper", "No transaction found with ID: $transactionId")
+            }
+            rowsAffected
+        } catch (e: SQLiteException) {
+            // Log the exception for debugging purposes
+            Log.e("TransactionDatabaseHelper", "Error deleting transaction with ID: $transactionId", e)
+            0 // Return 0 to indicate failure
+        } finally {
+            db.close() // Ensure the database connection is closed
+        }
+    }
+
+
+    fun insertTransaction(transaction: TransactionWithPayee): Long {
+        val db = appDatabaseHelper.writableDb
+        val contentValues = ContentValues().apply {
+            put("id", transaction.transactionId)
+            put("puid", transaction.puid)
+            put("payee_id", transaction.payeeId)
+            put("amount", transaction.amount)
+            put("date", transaction.date)
+            put("transaction_type", transaction.transactionType)
+        }
+        return db.insert("transactions", null, contentValues)
     }
     // Safely close the database if open
     fun closeDatabase(db: SQLiteDatabase?) {

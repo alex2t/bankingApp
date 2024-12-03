@@ -45,6 +45,7 @@ fun PayPayee(
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedPayee by remember { mutableStateOf<Payee?>(null) }
     var selectedPayeeId by remember { mutableStateOf<Int?>(null) } // Store payeeId for transaction
+    //var selectedPayeeIban by remember{ mutableStateOf<String?>(null)}
     var amount by remember { mutableStateOf("") }
     val payees by payeeViewModel.payees.collectAsState(initial = emptyList())
     val isLoading by transactionviewModel.loading.collectAsState()
@@ -94,6 +95,7 @@ fun PayPayee(
                     onPayeeSelected = { payee ->
                         selectedPayee = payee
                         selectedPayeeId = payee.payeeId // Update selectedPayeeId
+                        //selectedPayeeIban= payee.iban
                     },
                     selectedPayee = selectedPayee
                 )

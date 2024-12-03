@@ -32,6 +32,9 @@ class TransactionViewModel(
     private val _transactionStatus = MutableStateFlow<String?>(null)
     val transactionStatus: StateFlow<String?> get() = _transactionStatus
 
+    private val _deleteTransactionStatus = MutableStateFlow<Result<String>>(Result.success(""))
+
+
     // Function to fetch transactions for a given puid
     fun fetchTransactions(puid: String) {
         _loading.value = true // Start loading spinner
@@ -90,6 +93,32 @@ class TransactionViewModel(
                 Log.e("TransactionViewModel", "Error inserting transaction", e)
                 _transactionStatus.value = "Transaction failed: ${e.localizedMessage}"
                 _loading.value = false
+            }
+        }
+    }
+    fun deleteTransaction(transaction: TransactionWithPayee) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val rowsAffected = databaseHelper.deleteTransaction(transaction.transactionId.toLong())
+                if (rowsAffected > 0) {
+                    _deleteTransactionStatus.value = Result.success("Transaction deleted successfully.")
+                } else {
+                    Log.d("transactionViewModel", "deleteTransaction: delete Failed ")
+                    _deleteTransactionStatus.value = Result.failure(Exception("Transaction not found or could not be deleted."))
+                }
+            } catch (e: Exception) {
+                Log.d("transactionViewModel", "deleteTransaction: $e")
+                _deleteTransactionStatus.value = Result.failure(e)
+            }
+        }
+    }
+    fun undoDelete(transaction: TransactionWithPayee) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                databaseHelper.insertTransaction(transaction) // Reinsert the deleted transaction
+                fetchTransactions(transaction.puid) // Refresh the transaction list
+            } catch (e: Exception) {
+                Log.e("TransactionViewModel", "Error undoing transaction deletion", e)
             }
         }
     }

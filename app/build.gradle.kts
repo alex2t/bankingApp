@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.atm_osphere"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.atm_osphere"
@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     // WorkManager for background tasks
     implementation(libs.work.runtime.ktx)
+    implementation (libs.play.services.location)
 
     // Testing dependencies
     testImplementation(libs.junit)
