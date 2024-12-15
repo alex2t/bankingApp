@@ -94,7 +94,6 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
             Log.e("AuthViewModel", "errorLoginCall: ${e.message}")
         }
     }
-    // Create Account Function
     fun createAccount(email: String, password: String) {
         _puid.value = null
         _isLoading.value = true
@@ -109,13 +108,12 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
                     return@launch
                 }
 
-                // Generate the current date in yyyy-MM-dd format
                 val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                val puid = generateUniqueId() // Generate unique ID for the new user
+                val puid = generateUniqueId()
                 val newUser = User(puid, email, password, date)
 
                 databaseHelper.insertUserInBackground(newUser)
-                initializeDefaultDataForUser(puid) // Ensure puid is generated and passed correctly
+                initializeDefaultDataForUser(puid)
 
                 withContext(Dispatchers.Main) {
                     _statusMessage.value = "Account created successfully." to true
@@ -140,18 +138,12 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
     }
     private fun initializeDefaultDataForUser(puid: String) {
         if (puid.isBlank()) {
-            Log.e("AuthViewModel", "puid is blank. Cannot initialize default data.")
             return
         }
-        Log.d("AuthViewModel", "puid: $puid")
-
         viewModelScope.launch {
             try {
-                // Insert default payees and wait for completion
                 insertDefaultPayees(puid)
-                // Once payees are inserted, insert default transactions
                 insertDefaultTransactions(puid)
-                Log.d("AuthViewModel", "Default data initialized successfully for puid: $puid")
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Error initializing default data for user: $e")
             }
@@ -171,17 +163,12 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
                 Payee(null, puid, "Pat Murphy", "IE", "IE85BOFI900017779245", true)
             )
 
-            // Track WorkRequest IDs for all payees
             val workRequests = defaultPayees.map { payee ->
                 OneTimeWorkRequestBuilder<PayeeDatabaseWorker>()
                     .setInputData(payee.toWorkData())
                     .build()
             }
-
-            // Enqueue all work requests
             workRequests.forEach { workManager.enqueue(it) }
-
-            // Wait for all work requests to complete
             workRequests.forEach { workRequest ->
                 var workInfo: WorkInfo
                 do {
@@ -199,7 +186,6 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
 
     private suspend fun insertDefaultTransactions(puid: String) {
         withContext(Dispatchers.IO) {
-            // Fetch Payee IDs
             val payeeIds = mapOf(
                 "Netflix" to payeeDatabaseHelper.getPayeeIdByName("Netflix"),
                 "Salary" to payeeDatabaseHelper.getPayeeIdByName("Salary"),
@@ -222,7 +208,6 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
             defaultTransactions.forEach { transaction ->
                 try {
                     transactionDatabaseHelper.insertTransactionInBackground(transaction)
-                    Log.d("AuthViewModel", "Transaction inserted: $transaction")
                 } catch (e: Exception) {
                     Log.e("AuthViewModel", "Error inserting transaction: $transaction, error: $e")
                 }
@@ -233,20 +218,16 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
 
     // Logout Function
     fun logout() {
-        Log.d("AuthViewModel", "Entering logout() in AuthViewModel")
         _puid.value = null // Clear PUID on logout
         _statusMessage.value = null // Reset the status message
         _loggedIn.value = false // Ensure loggedIn is reset
         OutputManager.resetOutput() // reset remoteIP and userAgent
-        Log.d("AuthViewModel", "Logout called: PUID cleared and loggedIn set to false.")
     }
 
-    // Helper function to generate a unique ID
     private fun generateUniqueId(): String {
         return UUID.randomUUID().toString()
     }
 
-    // Clear the status message
     fun clearStatusMessage() {
         _statusMessage.value = "" to false
     }

@@ -62,4 +62,7 @@ object OutputManager {
 object ApiProvider {
     val apiFactory: ApiFactory by lazy { ApiFactory() }
     val apiHelper: ApiHelper by lazy { ApiHelper(apiFactory) }
+    fun cleanup() {
+        apiFactory.cleanup()
+    }
 }

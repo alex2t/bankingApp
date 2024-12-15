@@ -1,4 +1,4 @@
-package com.example.atm_osphere.view.postLogin
+package com.example.atm_osphere.view.postLogin.transaction
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.atm_osphere.model.TransactionWithPayee
 import java.util.Locale
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset

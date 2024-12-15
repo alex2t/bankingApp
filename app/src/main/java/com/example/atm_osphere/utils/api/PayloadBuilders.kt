@@ -36,8 +36,6 @@ object PayloadBuilders {
         return Json.encodeToString(payloadMap)
     }
 
-
-
     fun buildTransactionPayload(puid: String, payeeId: String, amount: Double, type: String): String {
         val json = JSONObject()
         json.put("puid", puid)

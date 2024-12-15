@@ -25,7 +25,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.MaterialTheme
 
 
-
 @Composable
 fun BasePage(
     navController: NavHostController,
@@ -72,7 +71,8 @@ fun BasePage(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.primary)
-                            .padding(8.dp),
+                            .padding(8.dp)
+                        ,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = {
@@ -91,7 +91,7 @@ fun BasePage(
                 },
                 bottomBar = {
                     BottomAppBar(
-                        containerColor  = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         content = {
                             Row(
                                 modifier = Modifier
@@ -115,4 +115,5 @@ fun BasePage(
         }
     )
 }
+
 

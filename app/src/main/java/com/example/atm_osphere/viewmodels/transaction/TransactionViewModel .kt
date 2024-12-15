@@ -35,30 +35,26 @@ class TransactionViewModel(
     private val _deleteTransactionStatus = MutableStateFlow<Result<String>>(Result.success(""))
 
 
-    // Function to fetch transactions for a given puid
     fun fetchTransactions(puid: String) {
         _loading.value = true // Start loading spinner
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Fetch transactions from the database
                 val transactions = databaseHelper.getTransactionsWithPayeeName(puid)
                 Log.d("TransactionViewModel", "Fetched ${transactions.size} transactions")
 
-                // Update StateFlow with the fetched transactions
                 withContext(Dispatchers.Main) {
-                    _transactions.value = transactions // Update StateFlow
-                    _loading.value = false // Stop loading spinner
+                    _transactions.value = transactions
+                    _loading.value = false
                 }
             } catch (e: Exception) {
                 Log.e("TransactionViewModel", "Error fetching transactions", e)
                 withContext(Dispatchers.Main) {
-                    _loading.value = false // Stop loading spinner on error
+                    _loading.value = false
                 }
             }
         }
     }
 
-    // Function to insert a transaction using WorkManager for new transaction
     fun insertTransactionInBackground(transaction: Transaction) {
         _loading.value = true
         viewModelScope.launch(Dispatchers.IO) {
@@ -75,7 +71,6 @@ class TransactionViewModel(
                     .setInputData(inputData)
                     .build()
                 workManager.enqueue(workRequest)
-                // Switch to the main thread to observe the work result
                 withContext(Dispatchers.Main) {
                     workManager.getWorkInfoByIdLiveData(workRequest.id)
                         .observeForever { workInfo ->
@@ -103,11 +98,9 @@ class TransactionViewModel(
                 if (rowsAffected > 0) {
                     _deleteTransactionStatus.value = Result.success("Transaction deleted successfully.")
                 } else {
-                    Log.d("transactionViewModel", "deleteTransaction: delete Failed ")
                     _deleteTransactionStatus.value = Result.failure(Exception("Transaction not found or could not be deleted."))
                 }
             } catch (e: Exception) {
-                Log.d("transactionViewModel", "deleteTransaction: $e")
                 _deleteTransactionStatus.value = Result.failure(e)
             }
         }

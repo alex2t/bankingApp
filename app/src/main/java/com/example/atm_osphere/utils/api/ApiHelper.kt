@@ -8,7 +8,6 @@ class ApiHelper (private val apiFactory: ApiFactory){
         private const val BASE_URL = "https://atmosphere.free.beeceptor.com"
 
     }
-
     suspend fun login(sessionId: String, puid: String, userAgent: String, remoteIp: String): String {
         //val endpoint = "login" // Specific endpoint
         val payload = PayloadBuilders.buildLoginPayload(sessionId, puid, userAgent, remoteIp)
@@ -27,7 +26,6 @@ class ApiHelper (private val apiFactory: ApiFactory){
         val jsonPayload = Json.encodeToString(AddPayeePayload.serializer(), payload)
         return apiFactory.postRequest(BASE_URL, jsonPayload)
     }
-
 
     suspend fun makeTransaction(puid: String, payeeId: String, amount: Double, type: String): String {
         //val endpoint = "transaction" // Specific endpoint

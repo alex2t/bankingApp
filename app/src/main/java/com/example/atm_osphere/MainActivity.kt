@@ -25,9 +25,13 @@ import androidx.lifecycle.DefaultLifecycleObserver
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.example.atm_osphere.ui.theme.ATMosphereTheme
 import com.example.atm_osphere.utils.ApiProvider
 
+
 import java.util.UUID
+
+// to do improve MainActivity split feature in seperate file for readibility
 
 class MainActivity : ComponentActivity() {
     private lateinit var authViewModel: AuthViewModel
@@ -35,19 +39,15 @@ class MainActivity : ComponentActivity() {
     private lateinit var handler: Handler
     private lateinit var inactivityRunnable: Runnable
 
-
     private val inactivityTimeout: Long = 5 * 60 * 1000 // 5 minutes in millisecond
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Open the database for Debugging via Database Inspector
-
         openDatabase(this)
-        // Initialize the handler
-        handler = Handler(Looper.getMainLooper())
 
-        // Define the runnable to handle logout
+        handler = Handler(Looper.getMainLooper())
         inactivityRunnable = Runnable {
             CoroutineScope(Dispatchers.Main).launch {
                 authViewModel.logout()
@@ -58,32 +58,29 @@ class MainActivity : ComponentActivity() {
         }
         // Start observing lifecycle changes
         setupLifecycleObserver()
+        //to do create a toggle light or dark theme with saving  option in datastore
         setContent {
-             navController = rememberNavController()
-            val sessionId = remember { mutableStateOf(UUID.randomUUID().toString()) }
-            //var puid = remember { mutableStateOf<String?>(null) }
-
-            // Instantiate ApiFactory and ApiHelper
-            val apiHelper = ApiProvider.apiHelper
-
-            // Initialize AuthViewModel using ViewModelProvider
-             authViewModel = ViewModelProvider(
-                 this,
-                 AuthViewModelFactory(
-                     UserDatabaseHelper(this),
-                     PayeeDatabaseHelper(this),
-                     TransactionDatabaseHelper(this),
-                     WorkManager.getInstance(this),
-                     apiHelper
-                 )
-             )[AuthViewModel::class.java]
-            // Set up navigation for both pre-login and post-login
-            NavigationSetup(
-                navController = navController,
-                authViewModel = authViewModel,
-                sessionId = sessionId.value,
-                apiHelper = apiHelper
-            )
+            ATMosphereTheme {
+                navController = rememberNavController()
+                val sessionId = remember { mutableStateOf(UUID.randomUUID().toString()) }
+                val apiHelper = ApiProvider.apiHelper
+                authViewModel = ViewModelProvider(
+                    this,
+                    AuthViewModelFactory(
+                        UserDatabaseHelper(this),
+                        PayeeDatabaseHelper(this),
+                        TransactionDatabaseHelper(this),
+                        WorkManager.getInstance(this),
+                        apiHelper
+                    )
+                )[AuthViewModel::class.java]
+                NavigationSetup(
+                    navController = navController,
+                    authViewModel = authViewModel,
+                    sessionId = sessionId.value,
+                    apiHelper = apiHelper
+                )
+            }
         }
     }
 
@@ -115,6 +112,7 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         // Call the logout function from AuthViewModel
+        ApiProvider.cleanup()
         CoroutineScope(Dispatchers.Main).launch {
             authViewModel.logout()
         }
@@ -140,5 +138,6 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(inactivityRunnable) // Cleanup
+        ApiProvider.cleanup() // releases resources used by OkHttp
     }
 }

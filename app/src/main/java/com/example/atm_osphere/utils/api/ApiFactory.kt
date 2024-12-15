@@ -9,13 +9,20 @@ import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
 
 class ApiFactory {
-    private val client: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS)
-        .build()
+    private val client: OkHttpClient
 
-
+    init {
+        try {
+            client = OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .build()
+        } catch (e: Exception) {
+            cleanup() // Clean up resources if the initialization fails
+            throw RuntimeException("Error initializing OkHttpClient: ${e.message}", e)
+        }
+    }
 
     suspend fun postRequest(url: String, jsonBody: String): String {
         val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
@@ -34,10 +41,19 @@ class ApiFactory {
                     throw IOException("HTTP Error: ${response.code}")
                 }
             } catch (e: SocketTimeoutException) {
-                throw IOException("Request timed out", e)
-            } finally {
                 call.cancel()
+                throw IOException("Request timed out", e)
             }
+        }
+    }
+
+    fun cleanup() {
+        try {
+            client.dispatcher.executorService.shutdown()
+            client.connectionPool.evictAll()
+            client.cache?.close()
+        } catch (e: Exception) {
+            println("Error during OkHttp cleanup: ${e.message}")
         }
     }
 

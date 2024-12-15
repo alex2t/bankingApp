@@ -1,5 +1,6 @@
-package com.example.atm_osphere.view.postLogin
+package com.example.atm_osphere.view.postLogin.payee
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
@@ -33,37 +34,34 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun AddPayee(
-    navController: NavHostController,
+    //navController: NavHostController,
     sessionId: String,
     puid: String,
-    authViewModel: AuthViewModel,
+   // authViewModel: AuthViewModel,
     payeeViewModel: PayeeViewModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val offsetFromTop = screenHeight * 0.1f  // 20% from top
+    val offsetFromTop = screenHeight * 0.1f // 10% from top
     val ibanStatusMessage by payeeViewModel.ibanStatusMessage.collectAsState()
     val addPayeeStatusMessage by payeeViewModel.addPayeeStatusMessage.collectAsState()
 
-
-
-    // Show snackbar for IBAN generation status
-    // IBAN Status Snackbar with auto-dismiss
+    // Display snackbars for status messages
     LaunchedEffect(ibanStatusMessage) {
+        Log.d("AddPayee IbanStausMessage", "Triggered LaunchedEffect: $ibanStatusMessage")
         ibanStatusMessage?.let { (message, _) ->
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(
                     message = message,
-                    duration = SnackbarDuration.Short  // Automatically dismisses after a short duration (~2 seconds)
+                    duration = SnackbarDuration.Short
                 )
-                delay(2000)  // Delay for 2 seconds to ensure visibility
-                payeeViewModel.resetIbanStatusMessage() // Reset IBAN status
+                delay(2000)
+                payeeViewModel.resetIbanStatusMessage()
             }
         }
     }
 
-    // Show snackbar for Add Payee status
     LaunchedEffect(addPayeeStatusMessage) {
         addPayeeStatusMessage?.let { (message, isSuccess) ->
             coroutineScope.launch {
@@ -76,58 +74,40 @@ fun AddPayee(
         }
     }
 
-    BasePage(
-        navController = navController,
-        pageTitle = "Add Payee Page",
-        drawerContent = {
-            DrawerContent(
-                navController = navController,
-                sessionId = sessionId,
-                puid = puid,
-                authViewModel = authViewModel
-            )
-        },
-        content = { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.TopCenter
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    // Display AddPayeeForm content
-                    AddPayeeForm(
-                        payeeViewModel = payeeViewModel,
-                        puid = puid,
-                        sessionId = sessionId,
-                        addPayeeStatusMessage = addPayeeStatusMessage,
-                        modifier = Modifier.padding(top = offsetFromTop),
-                    )
-
-                    // SessionId and PUID at the bottom
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        Text(text = "Session ID: $sessionId")
-                        Text(text = "PUID: $puid")
-                    }
-                }
-            }
-        },
-        sessionId = sessionId,
-        puid = puid,
-        authViewModel = authViewModel
-    )
-
-    // Place the SnackbarHost outside BasePage to display snackbar messages
     SnackbarHost(hostState = snackbarHostState)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            AddPayeeForm(
+                payeeViewModel = payeeViewModel,
+                puid = puid,
+                sessionId = sessionId,
+                addPayeeStatusMessage = addPayeeStatusMessage,
+                modifier = Modifier.padding(top = offsetFromTop),
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(text = "Session ID: $sessionId")
+                Text(text = "PUID: $puid")
+            }
+        }
+    }
+
+
+
 }
+
 @Composable
 fun AddPayeeForm(
     payeeViewModel: PayeeViewModel,
@@ -142,7 +122,7 @@ fun AddPayeeForm(
     val countryOptions = listOf("ISRAEL", "UK", "FRANCE", "SPAIN", "USA", "JAPAN")
     var expanded by remember { mutableStateOf(false) }
     val showAddPayeeButton = iban != null // Show the button only if IBAN is generated
-    //val addPayeeStatusMessage by payeeViewModel.addPayeeStatusMessage.collectAsState()
+
 
     LaunchedEffect(addPayeeStatusMessage) {
         addPayeeStatusMessage?.let { (_, isSuccess) ->
@@ -153,7 +133,6 @@ fun AddPayeeForm(
             }
         }
     }
-
 
     Column(
         modifier = modifier
@@ -241,7 +220,6 @@ fun AddPayeeForm(
         }
         Spacer(modifier = Modifier.weight(1f))
 
-        // Display sessionId and puid at the bottom
         Text(
             text = "Session ID: $sessionId",
             style = MaterialTheme.typography.bodySmall,

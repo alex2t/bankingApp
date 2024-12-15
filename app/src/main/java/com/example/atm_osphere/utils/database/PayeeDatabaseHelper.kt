@@ -105,6 +105,26 @@ class PayeeDatabaseHelper( context: Context)  {
 
         payeeId
     }
+    suspend fun deletePayee(puid: String, payee: Payee): Boolean = withContext(Dispatchers.IO) {
+        Log.d("deletePayee", "deletePayee called for puid: $puid and payee: ${payee.name}")
+        var isDeleted = false
+
+        try {
+            val db = appDatabaseHelper.writableDb
+            val rowsAffected = db.delete(
+                "Payee",
+                "puid = ? AND name = ? AND country = ? AND iban = ?",
+                arrayOf(puid, payee.name, payee.country, payee.iban)
+            )
+
+            isDeleted = rowsAffected > 0
+            Log.d("deletePayee", if (isDeleted) "Payee deleted successfully" else "Payee deletion failed")
+        } catch (e: Exception) {
+            Log.e("deletePayee", "Error deleting payee: ${payee.name}", e)
+        }
+
+        isDeleted
+    }
 
 
 

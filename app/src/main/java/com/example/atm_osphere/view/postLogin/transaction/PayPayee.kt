@@ -1,4 +1,4 @@
-package com.example.atm_osphere.view.postLogin
+package com.example.atm_osphere.view.postLogin.transaction
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -38,14 +38,13 @@ fun PayPayee(
     puid: String,
     authViewModel: AuthViewModel,
     payeeViewModel: PayeeViewModel,
-    transactionviewModel: TransactionViewModel,
-    //onPayeeSelected: (Payee) -> Unit,
+    transactionviewModel: TransactionViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedPayee by remember { mutableStateOf<Payee?>(null) }
-    var selectedPayeeId by remember { mutableStateOf<Int?>(null) } // Store payeeId for transaction
-    //var selectedPayeeIban by remember{ mutableStateOf<String?>(null)}
+    var selectedPayeeId by remember { mutableStateOf<Int?>(null) }
+    var selectedPayeeIban by remember{ mutableStateOf<String?>(null)}
     var amount by remember { mutableStateOf("") }
     val payees by payeeViewModel.payees.collectAsState(initial = emptyList())
     val isLoading by transactionviewModel.loading.collectAsState()
@@ -54,21 +53,19 @@ fun PayPayee(
     LaunchedEffect(puid) {
         payeeViewModel.getPayeesByPuid(puid)
     }
-
     LaunchedEffect(transactionStatus) {
         transactionStatus?.let {
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(it)
                 transactionviewModel.clearTransactionStatus()
                 if (it == "Transaction successful") {
-                    amount = "" // Clear amount text field
-                    selectedPayee = null // Reset dropdown
-                    selectedPayeeId = null // Reset selectedPayeeId
+                    amount = ""
+                    selectedPayee = null
+                    selectedPayeeId = null
                 }
             }
         }
     }
-
     BasePage(
         navController = navController,
         pageTitle = "Make Payment",
@@ -95,11 +92,10 @@ fun PayPayee(
                     onPayeeSelected = { payee ->
                         selectedPayee = payee
                         selectedPayeeId = payee.payeeId // Update selectedPayeeId
-                        //selectedPayeeIban= payee.iban
+                        selectedPayeeIban= payee.iban
                     },
                     selectedPayee = selectedPayee
                 )
-
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { input ->
@@ -111,7 +107,6 @@ fun PayPayee(
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
                 )
-
                 Button(
                     onClick = {
                         if (selectedPayeeId != null && amount.isNotEmpty()) {
@@ -142,10 +137,7 @@ fun PayPayee(
                         Text("Pay")
                     }
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
-
-                // Display Session ID and PUID at the bottom
                 Text(
                     text = "Session ID: $sessionId",
                     modifier = Modifier.fillMaxWidth(),

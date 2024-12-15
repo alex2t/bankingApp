@@ -33,7 +33,6 @@ class PayeeViewModel(
     private val _iban = MutableStateFlow<String?>(null)
     val iban: StateFlow<String?> get() = _iban
 
-    // Separate status messages for IBAN and Add Payee actions
     private val _ibanStatusMessage = MutableStateFlow<Pair<String, Boolean>?>(null)
     val ibanStatusMessage: StateFlow<Pair<String, Boolean>?> get() = _ibanStatusMessage
 
@@ -43,13 +42,17 @@ class PayeeViewModel(
     private val _payees = MutableStateFlow<List<Payee>>(emptyList())
     val payees: StateFlow<List<Payee>> get() = _payees
 
+    private val _deletePayeeStatusMessage = MutableStateFlow<Pair<String, Boolean>?>(null)
+    val deletePayeeStatusMessage: StateFlow<Pair<String, Boolean>?> = _deletePayeeStatusMessage
+
+    private val _isLoading= MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
+
     fun generateIban(country: String) {
         try {
             _iban.value = generateFakeIban(country)
-            Log.d("PayeeViewModel", "IBAN generated successfully for country: $country")
             _ibanStatusMessage.value = "IBAN generated successfully" to true // Set success message
         } catch (e: Exception) {
-            Log.e("PayeeViewModel", "Error generating IBAN for country: $country", e)
             _ibanStatusMessage.value = "Failed to generate IBAN" to false // Set error message
         }
     }
@@ -125,34 +128,43 @@ class PayeeViewModel(
             Log.e("PayeeViewModel", "Error calling addPayee API: ${e.message}")
         }
     }
+    fun resetIbanStatusMessage() { _ibanStatusMessage.value = null }
 
-
-
-
-    fun resetIbanStatusMessage() {
-        _ibanStatusMessage.value = null
-    }
-
-    fun resetAddPayeeStatusMessage() {
-        _addPayeeStatusMessage.value = null
-    }
+    fun resetAddPayeeStatusMessage() { _addPayeeStatusMessage.value = null }
 
     fun getPayeesByPuid(puid: String) {
+        _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val payeesList = databaseHelper.getPayeesByPuid(puid)
                 _payees.update { payeesList }
-                Log.d("PayeeViewModel", "Fetched ${payeesList.size} payees for puid: $puid")
+                _isLoading.value = false
+
             } catch (e: Exception) {
-                Log.e("PayeeViewModel", "Error fetching payees for puid: $puid", e)
+                withContext(Dispatchers.Main) {
+                    _isLoading.value = false
+                }
                 _addPayeeStatusMessage.value = "Failed to fetch payees" to false
             }
         }
     }
-
-    fun clearIban() {
-        _iban.value = null
+    fun deletePayee(puid: String, payee: Payee) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val result = databaseHelper.deletePayee(puid, payee)
+                if (result) {
+                    getPayeesByPuid(puid)
+                    _deletePayeeStatusMessage.value = "Payee deleted successfully" to true
+                } else {
+                    _deletePayeeStatusMessage.value = "Failed to delete payee" to false
+                }
+            } catch (e: Exception) {
+                Log.e("PayeeViewModel", "Error deleting payee: $payee", e)
+                _deletePayeeStatusMessage.value = "Error deleting payee" to false
+            }
+        }
     }
+    fun resetDeletePayeeStatusMessage() { _deletePayeeStatusMessage.value = null }
 
     fun resetFields() {
         _iban.value = null

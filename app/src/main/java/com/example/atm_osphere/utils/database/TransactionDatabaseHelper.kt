@@ -125,7 +125,7 @@ class TransactionDatabaseHelper(private val context: Context)  {
     fun insertTransaction(transaction: TransactionWithPayee): Long {
         val db = appDatabaseHelper.writableDb
         val contentValues = ContentValues().apply {
-            put("id", transaction.transactionId)
+            //put("id", transaction.transactionId)
             put("puid", transaction.puid)
             put("payee_id", transaction.payeeId)
             put("amount", transaction.amount)

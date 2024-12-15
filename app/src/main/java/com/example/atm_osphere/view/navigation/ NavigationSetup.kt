@@ -14,13 +14,14 @@ import com.example.atm_osphere.viewmodels.payee.PayeeViewModelFactory
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
 import com.example.atm_osphere.utils.api.ApiHelper
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.atm_osphere.utils.api.ApiFactory
-import com.example.atm_osphere.view.postLogin.AddPayee
+import com.example.atm_osphere.view.postLogin.payee.AddOrDeletePayeePage
 import com.example.atm_osphere.view.auth.CreateAccountScreen
 import com.example.atm_osphere.view.auth.HomePage
 import com.example.atm_osphere.view.postLogin.MainPage
 import com.example.atm_osphere.view.auth.SignInScreen
-import com.example.atm_osphere.view.postLogin.PayPayee
+import com.example.atm_osphere.view.postLogin.transaction.PayPayee
+import com.example.atm_osphere.view.postLogin.payee.AddPayee
+
 
 
 @Composable
@@ -108,16 +109,36 @@ fun NavigationSetup(
             )
         }
 
-        composable("addpayee/{sessionId}/{puid}") { backStackEntry ->
-            val navSessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+        composable("managepayee/{sessionId}/{puid}") { backStackEntry ->
+            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             val puid = backStackEntry.arguments?.getString("puid") ?: ""
-            AddPayee(
+
+            BasePage(
                 navController = navController,
-                sessionId = navSessionId,
+                pageTitle = "Manage Payee",
+                drawerContent = {
+                    DrawerContent(
+                        navController = navController,
+                        sessionId = sessionId,
+                        puid = puid,
+                        authViewModel = authViewModel
+                    )
+                },
+                sessionId = sessionId,
                 puid = puid,
                 authViewModel = authViewModel,
-                payeeViewModel = payeeViewModel
+                content = { paddingValues -> // Pass content parameter
+                    AddOrDeletePayeePage(
+                       // navController = navController,
+                        sessionId = sessionId,
+                        puid = puid,
+                        //authViewModel = authViewModel,
+                        payeeViewModel = payeeViewModel,
+                        paddingValues = paddingValues
+                    )
+                }
             )
         }
+
     }
 }

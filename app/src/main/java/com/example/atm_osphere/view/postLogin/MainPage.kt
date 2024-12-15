@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -19,6 +18,7 @@ import androidx.navigation.NavHostController
 import com.example.atm_osphere.model.TransactionWithPayee
 import com.example.atm_osphere.view.navigation.BasePage
 import com.example.atm_osphere.view.navigation.DrawerContent
+import com.example.atm_osphere.view.postLogin.transaction.TransactionItem
 import com.example.atm_osphere.viewmodels.auth.AuthViewModel
 import com.example.atm_osphere.viewmodels.transaction.TransactionViewModel
 import kotlinx.coroutines.flow.collectLatest

@@ -61,7 +61,7 @@ fun DrawerContent(
         // Add Payee Button
         TextButton(
             onClick = {
-                navController.navigate("addpayee/$sessionId/$puid")
+                navController.navigate("managepayee/$sessionId/$puid")
             },
             modifier = Modifier.fillMaxWidth()
         ) {
