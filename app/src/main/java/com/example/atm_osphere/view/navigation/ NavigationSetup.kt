@@ -20,7 +20,6 @@ import com.example.atm_osphere.view.auth.HomePage
 import com.example.atm_osphere.view.postLogin.MainPage
 import com.example.atm_osphere.view.auth.SignInScreen
 import com.example.atm_osphere.view.postLogin.transaction.PayPayee
-import com.example.atm_osphere.view.postLogin.payee.AddPayee
 
 
 
@@ -41,9 +40,11 @@ fun NavigationSetup(
     val transactionViewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModelFactory(
             databaseHelper = TransactionDatabaseHelper(context),
-            context = context
+            context = context,
+            apiHelper = apiHelper // Use the instance from ApiProvider
         )
     )
+
 
     val payeeViewModel: PayeeViewModel = viewModel(
         factory = PayeeViewModelFactory(

@@ -16,11 +16,15 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.atm_osphere.utils.workers.TransactionDatabaseWorker
 import androidx.work.WorkInfo
+import com.example.atm_osphere.model.TransactionPayload
+import com.example.atm_osphere.utils.OutputManager
+import com.example.atm_osphere.utils.api.ApiHelper
 
 
 class TransactionViewModel(
     private val databaseHelper: TransactionDatabaseHelper,
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val apiHelper: ApiHelper
 ) : ViewModel() {
 
     private val _transactions = MutableStateFlow<List<TransactionWithPayee>>(emptyList())
@@ -55,10 +59,12 @@ class TransactionViewModel(
         }
     }
 
-    fun insertTransactionInBackground(transaction: Transaction) {
+    fun insertTransactionInBackground(transaction: Transaction, sessionId: String, selectedPayeeIban: String, selectedPayeeCountry: String) {
         _loading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val (userAgent, remoteIp) = OutputManager.getUserAgentAndRemoteIp()
+
                 val inputData = Data.Builder()
                     .putString("puid", transaction.puid)
                     .putInt("payee_id", transaction.payeeId)
@@ -70,6 +76,7 @@ class TransactionViewModel(
                 val workRequest = OneTimeWorkRequestBuilder<TransactionDatabaseWorker>()
                     .setInputData(inputData)
                     .build()
+
                 workManager.enqueue(workRequest)
                 withContext(Dispatchers.Main) {
                     workManager.getWorkInfoByIdLiveData(workRequest.id)
@@ -77,6 +84,23 @@ class TransactionViewModel(
                             if (workInfo != null && workInfo.state.isFinished) {
                                 if (workInfo.state == WorkInfo.State.SUCCEEDED) {
                                     _transactionStatus.value = "Transaction successful"
+
+
+                                    val payload = TransactionPayload(
+                                        sessionId = sessionId,
+                                        permanentUserId = transaction.puid,
+                                        payeeIban = selectedPayeeIban,
+                                        payeeCountry = selectedPayeeCountry,
+                                        amount = transaction.amount,
+                                        transactionType = transaction.transactionType,
+                                        userAgent = userAgent,
+                                        remoteIp = remoteIp
+                                    )
+
+                                    // Call API
+                                    viewModelScope.launch(Dispatchers.IO) {
+                                        apiTransaction(payload)
+                                    }
                                 } else {
                                     _transactionStatus.value = "Transaction failed"
                                 }
@@ -91,6 +115,15 @@ class TransactionViewModel(
             }
         }
     }
+    private suspend fun apiTransaction(payload: TransactionPayload) {
+        try {
+            val response = apiHelper.makeTransaction(payload)
+            Log.d("TransactionViewModel", "API Transaction response: $response")
+        } catch (e: Exception) {
+            Log.e("TransactionViewModel", "Error making transaction API call", e)
+        }
+    }
+
     fun deleteTransaction(transaction: TransactionWithPayee) {
         viewModelScope.launch(Dispatchers.IO) {
             try {

@@ -209,7 +209,16 @@ fun AddPayeeForm(
                 Button(
                     onClick = {
                         iban?.let { nonNullIban ->
-                            payeeViewModel.addPayee(sessionId,puid, name, selectedCountry, nonNullIban,isDefault = true)
+                            val payeeData = mapOf(
+                                "puid" to puid,
+                                "name" to name,
+                                "country" to selectedCountry,
+                                "iban" to nonNullIban,
+                                "isDefault" to true
+                            )
+
+                            payeeViewModel.addPayee(sessionId, payeeData)
+
                         }
                     },
                     modifier = Modifier.fillMaxWidth()

@@ -1,6 +1,8 @@
 package com.example.atm_osphere.utils.api
 
 import com.example.atm_osphere.model.AddPayeePayload
+import com.example.atm_osphere.model.LoginPayload
+import com.example.atm_osphere.model.TransactionPayload
 import kotlinx.serialization.json.Json
 
 class ApiHelper (private val apiFactory: ApiFactory){
@@ -8,28 +10,18 @@ class ApiHelper (private val apiFactory: ApiFactory){
         private const val BASE_URL = "https://atmosphere.free.beeceptor.com"
 
     }
-    suspend fun login(sessionId: String, puid: String, userAgent: String, remoteIp: String): String {
-        //val endpoint = "login" // Specific endpoint
-        val payload = PayloadBuilders.buildLoginPayload(sessionId, puid, userAgent, remoteIp)
-        return apiFactory.postRequest(BASE_URL, payload)
+    suspend fun loginApi(payload: LoginPayload): String {
+        val jsonPayload = Json.encodeToString(LoginPayload.serializer(), payload)
+        return apiFactory.postRequest(BASE_URL, jsonPayload)
     }
 
-    suspend fun addPayee(sessionId: String, payeeData: String, userAgent: String, remoteIp: String): String {
-        val payload = AddPayeePayload(
-            sessionId = sessionId,
-            payeeData = Json.decodeFromString(payeeData),
-            userAgent = userAgent,
-            remoteIp = remoteIp
-        )
-
-        // Convert to JSON
+    suspend fun addPayeeApi(payload: AddPayeePayload): String {
         val jsonPayload = Json.encodeToString(AddPayeePayload.serializer(), payload)
         return apiFactory.postRequest(BASE_URL, jsonPayload)
     }
 
-    suspend fun makeTransaction(puid: String, payeeId: String, amount: Double, type: String): String {
-        //val endpoint = "transaction" // Specific endpoint
-        val payload = PayloadBuilders.buildTransactionPayload(puid, payeeId, amount, type)
-        return apiFactory.postRequest(BASE_URL, payload)
+    suspend fun makeTransaction(payload: TransactionPayload): String {
+        val jsonPayload = Json.encodeToString(TransactionPayload.serializer(), payload)
+        return apiFactory.postRequest(BASE_URL, jsonPayload)
     }
 }

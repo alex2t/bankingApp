@@ -17,6 +17,7 @@ import androidx.work.WorkManager
 import com.example.atm_osphere.utils.workers.PayeeDatabaseWorker
 import com.example.atm_osphere.utils.mapToWorkData
 import androidx.work.WorkInfo
+import com.example.atm_osphere.model.AddPayeePayload
 import kotlinx.coroutines.withContext
 import com.example.atm_osphere.utils.api.ApiHelper
 import com.example.atm_osphere.utils.OutputManager
@@ -57,17 +58,9 @@ class PayeeViewModel(
         }
     }
 
-    fun addPayee(sessionId: String,puid: String, name: String, countryCode: String, iban: String, isDefault: Boolean) {
+    fun addPayee(sessionId: String, payeeData: Map<String, Any>) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Prepare input data for the worker
-                val payeeData = mapOf(
-                    "puid" to puid,
-                    "name" to name,
-                    "country" to countryCode,
-                    "iban" to iban,
-                    "isDefault" to isDefault
-                )
 
                 val workData = mapToWorkData(payeeData)
 
@@ -114,20 +107,20 @@ class PayeeViewModel(
         val (userAgent, remoteIp) = OutputManager.getUserAgentAndRemoteIp()
 
         try {
-            // Use kotlinx.serialization to convert payeeData
-            val payeePayload = JsonObject(payeeData.mapValues { JsonPrimitive(it.value.toString()) })
-
-            val response = apiHelper.addPayee(
+            val payload = AddPayeePayload(
                 sessionId = sessionId,
-                payeeData = payeePayload.toString(),
+                payeeData = JsonObject(payeeData.mapValues { JsonPrimitive(it.value.toString()) }),
                 userAgent = userAgent,
                 remoteIp = remoteIp
             )
+
+            val response = apiHelper.addPayeeApi(payload)
             Log.d("PayeeViewModel", "Response: $response")
         } catch (e: Exception) {
             Log.e("PayeeViewModel", "Error calling addPayee API: ${e.message}")
         }
     }
+
     fun resetIbanStatusMessage() { _ibanStatusMessage.value = null }
 
     fun resetAddPayeeStatusMessage() { _addPayeeStatusMessage.value = null }

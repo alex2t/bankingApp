@@ -17,6 +17,7 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.example.atm_osphere.model.LoginPayload
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
 import com.example.atm_osphere.utils.workers.PayeeDatabaseWorker
 import com.example.atm_osphere.utils.OutputManager
@@ -67,7 +68,14 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
                             val (userAgent, remoteIp) = OutputManager.getUserAgentAndRemoteIp()
 
                             try {
-                                loginCall(sessionId, puid.value ?: "", userAgent, remoteIp)
+                                val payload = LoginPayload(
+                                    customerSessionId = sessionId,
+                                    permanentUserId = puid.value ?: "",
+                                    userAgent = userAgent,
+                                    remoteAddr = remoteIp
+                                )
+                                loginCall(payload)
+
                             } catch (e: Exception) {
                                 Log.e("AuthViewModel", "Error in loginCall: ${e.localizedMessage}")
                             }
@@ -86,14 +94,15 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
         }
     }
     // function to send data to the server
-    private suspend fun loginCall(sessionId:String , puid: String, userAgent: String, remoteIp: String ) {
+    private suspend fun loginCall(payload: LoginPayload) {
         try {
-            val response = apiHelper.login(sessionId, puid, userAgent, remoteIp)
+            val response = apiHelper.loginApi(payload)
             Log.d("AuthViewModel", "response: $response")
         } catch (e: Exception) {
             Log.e("AuthViewModel", "errorLoginCall: ${e.message}")
         }
     }
+
     fun createAccount(email: String, password: String) {
         _puid.value = null
         _isLoading.value = true

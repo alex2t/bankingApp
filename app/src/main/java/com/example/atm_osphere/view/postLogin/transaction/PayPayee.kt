@@ -1,5 +1,6 @@
 package com.example.atm_osphere.view.postLogin.transaction
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -45,6 +46,7 @@ fun PayPayee(
     var selectedPayee by remember { mutableStateOf<Payee?>(null) }
     var selectedPayeeId by remember { mutableStateOf<Int?>(null) }
     var selectedPayeeIban by remember{ mutableStateOf<String?>(null)}
+    var selectedPayeeCountry by remember{ mutableStateOf<String?>(null)}
     var amount by remember { mutableStateOf("") }
     val payees by payeeViewModel.payees.collectAsState(initial = emptyList())
     val isLoading by transactionviewModel.loading.collectAsState()
@@ -93,6 +95,7 @@ fun PayPayee(
                         selectedPayee = payee
                         selectedPayeeId = payee.payeeId // Update selectedPayeeId
                         selectedPayeeIban= payee.iban
+                        selectedPayeeCountry= payee.country
                     },
                     selectedPayee = selectedPayee
                 )
@@ -112,17 +115,27 @@ fun PayPayee(
                         if (selectedPayeeId != null && amount.isNotEmpty()) {
                             val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                             coroutineScope.launch {
-                                transactionviewModel.insertTransactionInBackground(
-                                    Transaction(
-                                        transactionId = null,
-                                        puid = puid,
-                                        payeeId = selectedPayeeId!!, // Use selectedPayeeId
-                                        amount = amount.toDouble(),
-                                        date = currentDate,
-                                        transactionType = "debit"
-                                    )
+                                val transaction = Transaction(
+                                    transactionId = null,
+                                    puid = puid,
+                                    payeeId = selectedPayeeId!!,
+                                    amount = amount.toDouble(),
+                                    date = currentDate,
+                                    transactionType = "debit"
                                 )
+
+                                transactionviewModel.insertTransactionInBackground(
+                                    transaction = transaction,
+                                    sessionId = sessionId,
+                                    selectedPayeeIban = selectedPayeeIban ?: "Unknown IBAN",
+                                    selectedPayeeCountry = selectedPayeeCountry ?: "Unknown Country"
+                                )
+
                             }
+                            Log.d("PayPayee", "Select Payee Iban: $selectedPayeeIban ")
+                            Log.d("PayPayee", "Select Payee Country: $selectedPayeeCountry ")
+                            Log.d("PayPayee", "sessionId: $sessionId ")
+                            Log.d("PayPayee", "puid: $puid ")
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
