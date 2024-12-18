@@ -12,21 +12,23 @@ import com.example.atm_osphere.viewmodels.transaction.TransactionViewModel
 import com.example.atm_osphere.viewmodels.payee.PayeeViewModel
 import com.example.atm_osphere.viewmodels.payee.PayeeViewModelFactory
 import com.example.atm_osphere.utils.database.TransactionDatabaseHelper
-import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
+import com.example.atm_osphere.utils.api.ApiHelper
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.atm_osphere.view.postLogin.AddPayee
+import com.example.atm_osphere.view.postLogin.payee.AddOrDeletePayeePage
 import com.example.atm_osphere.view.auth.CreateAccountScreen
 import com.example.atm_osphere.view.auth.HomePage
 import com.example.atm_osphere.view.postLogin.MainPage
 import com.example.atm_osphere.view.auth.SignInScreen
-import com.example.atm_osphere.view.postLogin.PayPayee
+import com.example.atm_osphere.view.postLogin.transaction.PayPayee
+
 
 
 @Composable
 fun NavigationSetup(
     navController: NavHostController,
-    sessionId: String, // Passed from MainActivity
-    authViewModel: AuthViewModel
+    sessionId: String, // The sessionId is passed to routes as part of the NavHost configuration in placeHolder and not
+    authViewModel: AuthViewModel,
+    apiHelper: ApiHelper
 ) {
     val context = navController.context
 
@@ -35,20 +37,21 @@ fun NavigationSetup(
     // Log to check if the loggedIn state is correctly updated
     Log.d("NavigationSetup", "loggedIn state: $loggedIn")
 
-
     val transactionViewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModelFactory(
-            TransactionDatabaseHelper(context),
-            "your-secure-passphrase".toCharArray()
-        )
-    )
-    val payeeViewModel: PayeeViewModel = viewModel(
-        factory = PayeeViewModelFactory(
-            PayeeDatabaseHelper(context),
-            "your-secure-passphrase"
+            databaseHelper = TransactionDatabaseHelper(context),
+            context = context,
+            apiHelper = apiHelper // Use the instance from ApiProvider
         )
     )
 
+
+    val payeeViewModel: PayeeViewModel = viewModel(
+        factory = PayeeViewModelFactory(
+            context = context,
+            apiHelper = apiHelper
+        )
+    )
 
     NavHost(
         navController = navController,
@@ -59,30 +62,30 @@ fun NavigationSetup(
         }
 
         composable("signIn/{sessionId}") { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val navSessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             SignInScreen(
                 viewModel = authViewModel,
                 navController = navController,
-                sessionId = sessionId
+                sessionId = navSessionId
             )
         }
 
         composable("createAccount/{sessionId}") { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val navSessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             CreateAccountScreen(
                 viewModel = authViewModel,
                 navController = navController,
-                sessionId = sessionId
+                sessionId = navSessionId
             )
         }
 
         composable("mainpage/{sessionId}/{puid}") { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val navSessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             val puid = backStackEntry.arguments?.getString("puid") ?: ""
             if (loggedIn) {
                 MainPage(
                     navController = navController,
-                    sessionId = sessionId,
+                    sessionId = navSessionId,
                     puid = puid,
                     authViewModel = authViewModel,
                     viewModel = transactionViewModel
@@ -95,11 +98,11 @@ fun NavigationSetup(
         }
 
         composable("payPayee/{sessionId}/{puid}") { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val navSessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             val puid = backStackEntry.arguments?.getString("puid") ?: ""
             PayPayee(
                 navController = navController,
-                sessionId = sessionId,
+                sessionId = navSessionId,
                 puid = puid,
                 authViewModel = authViewModel,
                 payeeViewModel = payeeViewModel,
@@ -107,16 +110,36 @@ fun NavigationSetup(
             )
         }
 
-        composable("addpayee/{sessionId}/{puid}") { backStackEntry ->
+        composable("managepayee/{sessionId}/{puid}") { backStackEntry ->
             val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             val puid = backStackEntry.arguments?.getString("puid") ?: ""
-            AddPayee(
+
+            BasePage(
                 navController = navController,
+                pageTitle = "Manage Payee",
+                drawerContent = {
+                    DrawerContent(
+                        navController = navController,
+                        sessionId = sessionId,
+                        puid = puid,
+                        authViewModel = authViewModel
+                    )
+                },
                 sessionId = sessionId,
                 puid = puid,
                 authViewModel = authViewModel,
-                payeeViewModel = payeeViewModel
+                content = { paddingValues -> // Pass content parameter
+                    AddOrDeletePayeePage(
+                       // navController = navController,
+                        sessionId = sessionId,
+                        puid = puid,
+                        //authViewModel = authViewModel,
+                        payeeViewModel = payeeViewModel,
+                        paddingValues = paddingValues
+                    )
+                }
             )
         }
+
     }
 }

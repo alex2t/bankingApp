@@ -10,66 +10,158 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.example.atm_osphere.utils.database.PayeeDatabaseHelper
 import com.example.atm_osphere.model.Payee
+import kotlinx.coroutines.delay
 import android.util.Log
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.atm_osphere.utils.workers.PayeeDatabaseWorker
+import com.example.atm_osphere.utils.mapToWorkData
+import androidx.work.WorkInfo
+import com.example.atm_osphere.model.AddPayeePayload
+import kotlinx.coroutines.withContext
+import com.example.atm_osphere.utils.api.ApiHelper
+import com.example.atm_osphere.utils.OutputManager
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+
 
 class PayeeViewModel(
     private val databaseHelper: PayeeDatabaseHelper,
-    private val passphrase: String
+    private val workManager: WorkManager,
+    private val apiHelper: ApiHelper
 ) : ViewModel() {
 
     private val _iban = MutableStateFlow<String?>(null)
     val iban: StateFlow<String?> get() = _iban
 
-    private val _statusMessage = MutableStateFlow<Pair<String?, Boolean>?>(null)
-    val statusMessage: StateFlow<Pair<String?, Boolean>?> get() = _statusMessage
+    private val _ibanStatusMessage = MutableStateFlow<Pair<String, Boolean>?>(null)
+    val ibanStatusMessage: StateFlow<Pair<String, Boolean>?> get() = _ibanStatusMessage
+
+    private val _addPayeeStatusMessage = MutableStateFlow<Pair<String, Boolean>?>(null)
+    val addPayeeStatusMessage: StateFlow<Pair<String, Boolean>?> get() = _addPayeeStatusMessage
 
     private val _payees = MutableStateFlow<List<Payee>>(emptyList())
     val payees: StateFlow<List<Payee>> get() = _payees
 
+    private val _deletePayeeStatusMessage = MutableStateFlow<Pair<String, Boolean>?>(null)
+    val deletePayeeStatusMessage: StateFlow<Pair<String, Boolean>?> = _deletePayeeStatusMessage
+
+    private val _isLoading= MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
+
     fun generateIban(country: String) {
         try {
             _iban.value = generateFakeIban(country)
-            Log.d("PayeeViewModel", "IBAN generated successfully for country: $country")
+            _ibanStatusMessage.value = "IBAN generated successfully" to true // Set success message
         } catch (e: Exception) {
-            Log.e("PayeeViewModel", "Error generating IBAN for country: $country", e)
-            _statusMessage.value = "Failed to generate IBAN" to false
+            _ibanStatusMessage.value = "Failed to generate IBAN" to false // Set error message
         }
     }
 
-    fun addPayee(puid: String, name: String, countryCode: String) {
+    fun addPayee(sessionId: String, payeeData: Map<String, Any>) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val payee = Payee(name, countryCode, _iban.value!!)
-                val success = databaseHelper.insertPayee(puid, payee, passphrase)
-                _statusMessage.update {
-                    if (success) {
-                        "Payee added successfully" to true
-                    } else {
-                        "An error occurred: Payee was not added" to false
-                    }
+
+                val workData = mapToWorkData(payeeData)
+
+                // Create and enqueue a work request for PayeeDatabaseWorker
+                val workRequest = OneTimeWorkRequestBuilder<PayeeDatabaseWorker>()
+                    .setInputData(workData)
+                    .build()
+
+                // Enqueue the work request using the injected WorkManager instance
+                workManager.enqueue(workRequest)
+
+                // Switch to the main thread to observe the work result
+                withContext(Dispatchers.Main) {
+                    workManager.getWorkInfoByIdLiveData(workRequest.id)
+                        .observeForever { workInfo ->
+                            if (workInfo != null && workInfo.state.isFinished) {
+                                if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                                    _addPayeeStatusMessage.value = "Payee added successfully" to true
+                                    viewModelScope.launch(Dispatchers.IO) {
+                                        apiAddPayee(payeeData, sessionId)
+                                    }
+                                } else {
+                                    val errorMessage = workInfo.outputData.getString("error_message")
+                                        ?: "An error occurred: Payee was not added"
+                                    _addPayeeStatusMessage.value = errorMessage to false
+                                }
+
+                                // Clear the status message after a short delay
+                                viewModelScope.launch {
+                                    delay(2000)
+                                    _addPayeeStatusMessage.value = null
+                                }
+                            }
+                        }
                 }
             } catch (e: Exception) {
-                _statusMessage.update {
-                    "An error occurred: ${e.message}" to false
-                }
+                _addPayeeStatusMessage.value = "An error occurred: ${e.message}" to false
             }
         }
     }
+
+
+    private suspend fun apiAddPayee(payeeData: Map<String, Any>, sessionId: String) {
+        val (userAgent, remoteIp) = OutputManager.getUserAgentAndRemoteIp()
+
+        try {
+            val payload = AddPayeePayload(
+                sessionId = sessionId,
+                payeeData = JsonObject(payeeData.mapValues { JsonPrimitive(it.value.toString()) }),
+                userAgent = userAgent,
+                remoteIp = remoteIp
+            )
+
+            val response = apiHelper.addPayeeApi(payload)
+            Log.d("PayeeViewModel", "Response: $response")
+        } catch (e: Exception) {
+            Log.e("PayeeViewModel", "Error calling addPayee API: ${e.message}")
+        }
+    }
+
+    fun resetIbanStatusMessage() { _ibanStatusMessage.value = null }
+
+    fun resetAddPayeeStatusMessage() { _addPayeeStatusMessage.value = null }
 
     fun getPayeesByPuid(puid: String) {
+        _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val payeesList = databaseHelper.getPayeesByPuid(puid, passphrase)
+                val payeesList = databaseHelper.getPayeesByPuid(puid)
                 _payees.update { payeesList }
-                Log.d("PayeeViewModel", "Fetched ${payeesList.size} payees for puid: $puid")
+                _isLoading.value = false
+
             } catch (e: Exception) {
-                Log.e("PayeeViewModel", "Error fetching payees for puid: $puid", e)
-                _statusMessage.update { "Failed to fetch payees" to false }
+                withContext(Dispatchers.Main) {
+                    _isLoading.value = false
+                }
+                _addPayeeStatusMessage.value = "Failed to fetch payees" to false
             }
         }
     }
+    fun deletePayee(puid: String, payee: Payee) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val result = databaseHelper.deletePayee(puid, payee)
+                if (result) {
+                    getPayeesByPuid(puid)
+                    _deletePayeeStatusMessage.value = "Payee deleted successfully" to true
+                } else {
+                    _deletePayeeStatusMessage.value = "Failed to delete payee" to false
+                }
+            } catch (e: Exception) {
+                Log.e("PayeeViewModel", "Error deleting payee: $payee", e)
+                _deletePayeeStatusMessage.value = "Error deleting payee" to false
+            }
+        }
+    }
+    fun resetDeletePayeeStatusMessage() { _deletePayeeStatusMessage.value = null }
 
-    fun resetStatusMessage() {
-        _statusMessage.value = "" to false
+    fun resetFields() {
+        _iban.value = null
+        _addPayeeStatusMessage.value = null
     }
 }
+

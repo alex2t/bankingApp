@@ -4,162 +4,136 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import androidx.work.WorkManager
-import net.sqlcipher.database.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import com.example.atm_osphere.model.Transaction
 import android.util.Log
 import androidx.work.Data
+import com.example.atm_osphere.model.TransactionWithPayee
 import androidx.work.OneTimeWorkRequestBuilder
 import com.example.atm_osphere.utils.workers.TransactionDatabaseWorker
-import net.sqlcipher.database.SQLiteOpenHelper
+class TransactionDatabaseHelper(private val context: Context)  {
+    private val appDatabaseHelper = AppDatabaseHelper(context)
 
-class TransactionDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+    fun getTransactionsWithPayeeName(puid: String): List<TransactionWithPayee> {
+        val db = appDatabaseHelper.readableDb
+        val transactionsWithPayees = mutableListOf<TransactionWithPayee>()
 
-    companion object {
-        private const val DATABASE_NAME = "transaction_database.db"
-        private const val DATABASE_VERSION = 1
-    }
+        val query = """
+        SELECT  transactions.transaction_id, 
+                transactions.payee_id, 
+                transactions.amount, 
+                transactions.date, 
+                transactions.transaction_type,
+                Payee.name AS payee_name
+                FROM transactions
+                INNER JOIN Payee ON transactions.payee_id = Payee.payeeId
+                WHERE transactions.puid = ? 
+                ORDER BY transactions.date DESC
+    """.trimIndent()
 
-    init {
-        SQLiteDatabase.loadLibs(context) // Load SQLCipher libraries
-    }
 
-    override fun onCreate(db: SQLiteDatabase?) {
-        val createTableSQL = """
-            CREATE TABLE transactions (
-                puid TEXT,
-                name TEXT,
-                type TEXT,
-                amount REAL
-            )
-        """.trimIndent()
-        db?.execSQL(createTableSQL)
-    }
+        Log.d("DatabaseQuery", "Executing query: $query")
 
-    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        db?.execSQL("DROP TABLE IF EXISTS transactions")
-        onCreate(db)
-    }
-
-    // Retrieve transactions for a given puid and insert default if none found
-    fun getTransactionsByPuid(puid: String, passphrase: String): List<Transaction> {
-        val db = this.getReadableDatabase(passphrase.toCharArray())
         var cursor: Cursor? = null
-        val transactions = mutableListOf<Transaction>()
-
         try {
-            // Query transactions by puid
-            cursor = db.query(
-                "transactions", null,
-                "puid=?", arrayOf(puid),
-                null, null, null
-            )
+            cursor = db.rawQuery(query, arrayOf(puid))
 
-            // Iterate through the cursor and build a list of transactions
-            if (cursor != null && cursor.moveToFirst()) {
+            if (cursor.moveToFirst()) {
                 do {
-                    val nameIndex = cursor.getColumnIndex("name")
-                    val typeIndex = cursor.getColumnIndex("type")
-                    val amountIndex = cursor.getColumnIndex("amount")
+                    // Retrieve column indices, only if they exist
+                    val transactionIdIndex = cursor.getColumnIndex("transaction_id").takeIf { it >= 0 }
+                    val payeeNameIndex = cursor.getColumnIndex("payee_name").takeIf { it >= 0 }
+                    val payeeIdIndex = cursor.getColumnIndex("payee_id").takeIf { it >= 0 }
+                    val amountIndex = cursor.getColumnIndex("amount").takeIf { it >= 0 }
+                    val dateIndex = cursor.getColumnIndex("date").takeIf { it >= 0 }
+                    val transactionTypeIndex = cursor.getColumnIndex("transaction_type").takeIf { it >= 0 }
 
-                    // Ensure that column indices are valid
-                    val name = cursor.getString(nameIndex)
-                    val type = cursor.getString(typeIndex)
-                    val amount = cursor.getDouble(amountIndex)
+                    // Retrieve values only if the column indices are valid (i.e., not -1)
+                    val transactionId = transactionIdIndex?.let { cursor.getInt(it) }
+                    val payeeName = payeeNameIndex?.let { cursor.getString(it) }
+                    val payeeId = payeeIdIndex?.let { cursor.getInt(it) }
+                    val amount = amountIndex?.let { cursor.getDouble(it) }
+                    val date = dateIndex?.let { cursor.getString(it) }
+                    val transactionType = transactionTypeIndex?.let { cursor.getString(it) }
 
-                    transactions.add(Transaction(puid, name, type, amount))
+                    // Only add the transaction if all necessary fields are non-null
+                    if (transactionId != null && payeeName != null && payeeId != null && amount != null && date != null && transactionType != null) {
+
+                        transactionsWithPayees.add(
+                            TransactionWithPayee(
+                                transactionId = transactionId,
+                                puid = puid,
+                                payeeName = payeeName,
+                                payeeId = payeeId,
+                                amount = amount,
+                                date = date,
+                                transactionType = transactionType
+                            )
+                        )
+                    } else {
+                        Log.e("TransactionDatabaseHelper", "Missing fields for transaction with puid: $puid")
+                    }
                 } while (cursor.moveToNext())
-                Log.d("TransactionDatabaseHelper", "Found ${transactions.size} transactions for puid: $puid")
-
             }
-
-            // If no transactions exist for this puid, insert default transactions
-            if (transactions.isEmpty()) {
-                Log.d("TransactionDatabaseHelper", "transactions is Empty for puid: $puid")
-                val defaultTransactions = listOf(
-                    Transaction(puid, "Netflix", "debit", 25.00),
-                    Transaction(puid, "Salary", "credit", 5000.00),
-                    Transaction(puid, "John Doe", "credit", 500.00),
-                    Transaction(puid, "Gym", "debit", 20.00),
-                    Transaction(puid, "Sponsor", "credit", 70.00)
-                )
-                // Insert default transactions and add them to the list
-                defaultTransactions.forEach { insertTransaction(it, passphrase) }
-                transactions.addAll(defaultTransactions) // Add defaults to the returned list
-                Log.d("TransactionDatabaseHelper", "Inserted ${transactions.size} transactions for puid: $puid")
-            }
-
         } catch (e: Exception) {
-            e.printStackTrace() // Log any potential errors
+            Log.e("TransactionDatabaseHelper", "error", e)
+            e.printStackTrace()
         } finally {
-            cursor?.close()  // Safely close the cursor
-            db.close()  // Safely close the database
+            cursor?.close()
+            db.close()
         }
-
-        return transactions // Return the list of transactions
-    }
-
-    // Insert a transaction into the database
-    fun insertTransaction(transaction: Transaction, passphrase: String) {
-        val db = this.getWritableDatabase(passphrase.toCharArray())
-        val contentValues = ContentValues().apply {
-            put("puid", transaction.puid)
-            put("name", transaction.name)
-            put("type", transaction.type)
-            put("amount", transaction.amount)
-        }
-        db.insert("transactions", null, contentValues)  // Insert the transaction
-        db.close()  // Close the database after insertion
+        return transactionsWithPayees
     }
 
     // Background transaction insertion using WorkManager
-    fun insertTransactionInBackground(transaction: Transaction, passphrase: String) {
+    fun insertTransactionInBackground(transaction: Transaction) {
         val inputData = Data.Builder()
             .putString("puid", transaction.puid)
-            .putString("name", transaction.name)
-            .putString("type", transaction.type)
+            .putInt("payee_id", transaction.payeeId)
             .putDouble("amount", transaction.amount)
-            .putString("passphrase", passphrase)
+            .putString("date", transaction.date)
+            .putString("transaction_type", transaction.transactionType)
             .build()
-
+        Log.d("insertTransactionInBackground", "puid:${transaction.puid} payee_id:${transaction.payeeId} amount:${transaction.amount} date:${transaction.date}  transaction_type:${transaction.transactionType}")
         val workRequest = OneTimeWorkRequestBuilder<TransactionDatabaseWorker>()
             .setInputData(inputData)
             .build()
 
-        WorkManager.getInstance(context).enqueue(workRequest)  // Enqueue the background task
+        WorkManager.getInstance(context).enqueue(workRequest)
     }
-    fun insertDefaultTransactionsForPuid(puid: String, passphrase: String) {
-        val defaultTransactions = listOf(
-            Transaction(puid, "Netflix", "debit", 25.00),
-            Transaction(puid, "Salary", "credit", 5000.00),
-            Transaction(puid, "John Doe", "credit", 500.00),
-            Transaction(puid, "Gym", "debit", 20.00),
-            Transaction(puid, "Sponsor", "credit", 70.00)
-        )
-
-        val db = this.getWritableDatabase(passphrase.toCharArray())
-        db.beginTransaction()
-        try {
-            for (transaction in defaultTransactions) {
-                val contentValues = ContentValues().apply {
-                    put("puid", transaction.puid)
-                    put("name", transaction.name)
-                    put("type", transaction.type)
-                    put("amount", transaction.amount)
-                }
-                db.insert("transactions", null, contentValues)
+    fun deleteTransaction(transactionId: Long): Int {
+        Log.d("TransactionDatabaseHelper", "deleteTransaction: $transactionId")
+        val db = appDatabaseHelper.readableDb
+        return try {
+            val rowsAffected = db.delete("transactions", "transaction_id = ?", arrayOf(transactionId.toString()))
+            if (rowsAffected == 0) {
+                // Log a warning if no rows were affected
+                Log.w("TransactionDatabaseHelper", "No transaction found with ID: $transactionId")
             }
-            db.setTransactionSuccessful()
-            Log.d("TransactionDatabaseHelper", "Inserted ${defaultTransactions.size} transactions for puid: $puid")
-        } catch (e: Exception) {
-            e.printStackTrace()
+            rowsAffected
+        } catch (e: SQLiteException) {
+            // Log the exception for debugging purposes
+            Log.e("TransactionDatabaseHelper", "Error deleting transaction with ID: $transactionId", e)
+            0 // Return 0 to indicate failure
         } finally {
-            db.endTransaction()
-            db.close()
+            db.close() // Ensure the database connection is closed
         }
     }
 
 
-
+    fun insertTransaction(transaction: TransactionWithPayee): Long {
+        val db = appDatabaseHelper.writableDb
+        val contentValues = ContentValues().apply {
+            //put("id", transaction.transactionId)
+            put("puid", transaction.puid)
+            put("payee_id", transaction.payeeId)
+            put("amount", transaction.amount)
+            put("date", transaction.date)
+            put("transaction_type", transaction.transactionType)
+        }
+        return db.insert("transactions", null, contentValues)
+    }
     // Safely close the database if open
     fun closeDatabase(db: SQLiteDatabase?) {
         db?.let {

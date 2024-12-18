@@ -23,7 +23,7 @@ fun DrawerContent(
 ) {
     Column(
         modifier = modifier
-            .padding(8.dp)
+            .padding(1.dp)
             .fillMaxHeight(),
         verticalArrangement = Arrangement.Top
     ) {
@@ -61,7 +61,7 @@ fun DrawerContent(
         // Add Payee Button
         TextButton(
             onClick = {
-                navController.navigate("addpayee/$sessionId/$puid")
+                navController.navigate("managepayee/$sessionId/$puid")
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -92,5 +92,6 @@ fun DrawerContent(
             )
             Text(text = "Logout", fontSize = 20.sp)
         }
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
     }
 }

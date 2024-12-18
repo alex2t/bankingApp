@@ -19,6 +19,11 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
 import com.example.atm_osphere.viewmodels.auth.AuthViewModel
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.MaterialTheme
+
 
 @Composable
 fun BasePage(
@@ -28,16 +33,16 @@ fun BasePage(
     content: @Composable (PaddingValues) -> Unit,
     sessionId: String?,
     puid: String?,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val coroutineScope = rememberCoroutineScope()  // Create a coroutine scope
+    val coroutineScope = rememberCoroutineScope()
 
     BackHandler {
         navController.navigate("home") {
             authViewModel.logout()
             popUpTo("home") { inclusive = true }
-
         }
     }
 
@@ -50,7 +55,7 @@ fun BasePage(
                     .padding(16.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
@@ -66,11 +71,12 @@ fun BasePage(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.primary)
-                            .padding(8.dp),
+                            .padding(8.dp)
+                        ,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = {
-                            coroutineScope.launch {  // Launch a coroutine to open the drawer
+                            coroutineScope.launch {
                                 drawerState.open()
                             }
                         }) {
@@ -83,8 +89,31 @@ fun BasePage(
                         )
                     }
                 },
+                bottomBar = {
+                    BottomAppBar(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        content = {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "ATM_OSPHERE",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            }
+                        }
+                    )
+                },
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 content = content
             )
         }
     )
 }
+
+

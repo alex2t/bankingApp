@@ -19,10 +19,14 @@ fun SignInScreen(viewModel: AuthViewModel, navController: NavController, session
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
+    val isLoading by viewModel.isLoading.collectAsState()
 
     val statusMessage by viewModel.statusMessage.collectAsState()
     val puid by viewModel.puid.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.clearStatusMessage()
+    }
     // When PUID is available, navigate to the main page
     LaunchedEffect(puid) {
         if (puid != null && puid!!.isNotBlank()) {
@@ -36,63 +40,77 @@ fun SignInScreen(viewModel: AuthViewModel, navController: NavController, session
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center, // Center content vertically
+        horizontalAlignment = Alignment.CenterHorizontally // Align content horizontally
     ) {
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            singleLine = true
-        )
-
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            singleLine = true
-        )
-
-        Button(
-            onClick = {
-                focusManager.clearFocus()
-                if (email.isNotBlank() && password.isNotBlank()) {
-                    viewModel.signIn(email, password)
-                }
-            },
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            enabled = email.isNotBlank() && password.isNotBlank()
+            horizontalAlignment = Alignment.CenterHorizontally // Align items in the column
         ) {
-            Text("Sign In")
-        }
+            TextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                singleLine = true
+            )
 
-        statusMessage?.let { (message, isSuccess) ->
-            if (message?.isNotBlank() == true) {
+            TextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                singleLine = true
+            )
+
+            Button(
+                onClick = {
+                    focusManager.clearFocus()
+                    if (email.isNotBlank() && password.isNotBlank()) {
+                        viewModel.signIn(email, password, sessionId)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = email.isNotBlank() && password.isNotBlank()
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Sign In")
+                }
+            }
+
+            statusMessage?.let { (message, isSuccess) ->
+                if (message?.isNotBlank() == true) {
+                    Text(
+                        text = message,
+                        color = if (isSuccess) Color.Green else Color.Red,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.weight(1f))
+
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.BottomStart
+            ) {
                 Text(
-                    text = message,
-                    color = if (isSuccess) Color.Green else Color.Red,
-                    modifier = Modifier.padding(top = 8.dp)
+                    text = "Session ID: $sessionId",
+                    modifier = Modifier.padding(16.dp)
                 )
             }
         }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.BottomStart
-        ) {
-            Text(
-                text = "Session ID: $sessionId",
-                modifier = Modifier.padding(16.dp)
-            )
-        }
     }
 }
+
 

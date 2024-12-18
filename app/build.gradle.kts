@@ -2,11 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
     namespace = "com.example.atm_osphere"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.atm_osphere"
@@ -57,6 +58,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.okhttp)
 
     // Compose runtime livedata
     implementation(libs.compose.runtime.livedata)
@@ -73,11 +77,11 @@ dependencies {
     // Lifecycle ViewModel and Compose integration
     implementation(libs.lifecycle.viewmodel.compose)
 
-    // SQLCipher for encrypted database
-    implementation(libs.sqlcipher)
 
+    implementation(libs.kotlinx.serialization.json)
     // WorkManager for background tasks
     implementation(libs.work.runtime.ktx)
+    implementation (libs.play.services.location)
 
     // Testing dependencies
     testImplementation(libs.junit)
@@ -89,7 +93,7 @@ dependencies {
     // Debugging and preview tooling for Compose
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    debugImplementation(libs.compose.tooling)           // Removed duplicate; it should be this reference
+    debugImplementation(libs.compose.tooling)
     debugImplementation(libs.compose.test.manifest)
 
     // LeakCanary for memory leak detection
