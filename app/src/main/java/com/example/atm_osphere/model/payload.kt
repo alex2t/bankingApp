@@ -5,6 +5,7 @@ import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class LoginPayload(
+    val activity: String,
     val customerSessionId: String,
     val permanentUserId: String,
     val userAgent: String,
@@ -12,6 +13,8 @@ data class LoginPayload(
 )
 @Serializable
 data class AddPayeePayload(
+    val activity: String,
+    val permanentUserId: String,
     val sessionId: String,
     val payeeData: JsonObject,
     val userAgent: String,
@@ -20,6 +23,7 @@ data class AddPayeePayload(
 
 @Serializable
 data class TransactionPayload(
+    val activity: String,
     val sessionId: String,
     val permanentUserId: String,
     val payeeIban: String,

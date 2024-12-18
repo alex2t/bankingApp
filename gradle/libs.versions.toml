@@ -1,9 +1,8 @@
 [versions]
-<<<<<<< HEAD
-agp = "8.7.1"
-=======
+
+
 agp = "8.7.3"
->>>>>>> 6a8a6e591e6571a9c645ae798e0c686ebc1f1ce1
+
 kotlin = "2.0.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"

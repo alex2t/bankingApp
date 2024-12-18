@@ -7,7 +7,7 @@ import kotlinx.serialization.json.Json
 
 class ApiHelper (private val apiFactory: ApiFactory){
     companion object {
-        private const val BASE_URL = "https://atmosphere.free.beeceptor.com"
+        private const val BASE_URL = "https://catcheroo.com/listener"
 
     }
     suspend fun loginApi(payload: LoginPayload): String {

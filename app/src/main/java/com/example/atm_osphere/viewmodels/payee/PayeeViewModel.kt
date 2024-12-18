@@ -108,6 +108,8 @@ class PayeeViewModel(
 
         try {
             val payload = AddPayeePayload(
+                activity = "AddPayee",
+                permanentUserId = payeeData["permanentUserId"].toString(),
                 sessionId = sessionId,
                 payeeData = JsonObject(payeeData.mapValues { JsonPrimitive(it.value.toString()) }),
                 userAgent = userAgent,

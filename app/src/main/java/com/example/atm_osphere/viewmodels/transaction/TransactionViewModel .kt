@@ -87,6 +87,7 @@ class TransactionViewModel(
 
 
                                     val payload = TransactionPayload(
+                                        activity = "Transaction",
                                         sessionId = sessionId,
                                         permanentUserId = transaction.puid,
                                         payeeIban = selectedPayeeIban,

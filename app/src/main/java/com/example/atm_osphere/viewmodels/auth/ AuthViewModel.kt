@@ -69,6 +69,7 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
 
                             try {
                                 val payload = LoginPayload(
+                                    activity = "Login",
                                     customerSessionId = sessionId,
                                     permanentUserId = puid.value ?: "",
                                     userAgent = userAgent,
