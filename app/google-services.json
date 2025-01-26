@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "583924538240",
+    "project_id": "atmosphere-29d52",
+    "storage_bucket": "atmosphere-29d52.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:583924538240:android:de5ef0950964d2b26c7f65",
+        "android_client_info": {
+          "package_name": "com.example.atmosphere"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAusfKTylr498k2ZVima7QDHV47WFOS9JE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

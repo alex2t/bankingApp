@@ -1,22 +1,25 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.firebase-perf")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
-    namespace = "com.example.atm_osphere"
+    namespace = "com.example.atmosphere"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.atm_osphere"
+        applicationId = "com.example.atmosphere"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -83,6 +86,7 @@ dependencies {
     implementation(libs.work.runtime.ktx)
     implementation (libs.play.services.location)
 
+
     // Testing dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -98,4 +102,10 @@ dependencies {
 
     // LeakCanary for memory leak detection
     debugImplementation(libs.leakcanary.android)
+
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.perf)
+
 }
