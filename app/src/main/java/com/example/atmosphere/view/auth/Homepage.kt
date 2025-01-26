@@ -2,7 +2,9 @@ package com.example.atmosphere.view.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -32,24 +34,25 @@ fun HomePage(navController: NavController) {
 
     Column(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()) // Allows content to scroll on smaller screens
+            .padding(16.dp), // General padding for consistent spacing
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = R.drawable.athmosphere), // Ensure the logo is in drawable
+            painter = painterResource(id = R.drawable.athmosphere),
             contentDescription = "ATM_OSPHERE Logo",
             modifier = Modifier
-                .width(350.dp)
+                .fillMaxWidth(0.8f) // Scales width to 80% of screen width
                 .aspectRatio(1f)
-                .padding(top = 30.dp )
-
+                .padding(top = 30.dp)
         )
-        //Spacer(modifier = Modifier.height(32.dp))
+
         Text(
             text = buildAnnotatedString {
                 withStyle(style = SpanStyle(
-                    fontSize = 50.sp,
+                    fontSize = 40.sp,
                     fontFamily = LogoFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.tertiary
@@ -62,48 +65,41 @@ fun HomePage(navController: NavController) {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top=30.dp, bottom = 180.dp,),
+                .padding(vertical = 16.dp), // Dynamic spacing
             textAlign = TextAlign.Center,
             lineHeight = 50.sp
         )
-        //Spacer(modifier = Modifier.height(42.dp))
 
         Text(
             text = "Session ID: $sessionId",
-           // modifier = Modifier
-                //.padding(top = 40.dp,),
-                //.align(Alignment.CenterHorizontally),
+            modifier = Modifier.padding(vertical = 8.dp), // Adds some spacing
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(2.dp))
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                 .padding(bottom= 20.dp),
-//                .padding(bottom = 32.dp),
+                .padding(vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
-
         ) {
-            Button(onClick = { navController.navigate("signIn/$sessionId") },
-                    modifier = Modifier
+            Button(
+                onClick = { navController.navigate("signIn/$sessionId") },
+                modifier = Modifier
                     .weight(1f)
-                     .padding(end = 8.dp)
-
+                    .padding(end = 8.dp)
             ) {
-                BasicText(
-                    "Sign In",
-                    style = TextStyle(color = Color.White))
+                BasicText("Sign In", style = TextStyle(color = Color.White))
             }
-            Button(onClick = { navController.navigate("createAccount/$sessionId") },
+
+            Button(
+                onClick = { navController.navigate("createAccount/$sessionId") },
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp)
-
-                ) {
-                BasicText(
-                    "Register",
-                    style = TextStyle(color = Color.White))
+            ) {
+                BasicText("Register", style = TextStyle(color = Color.White))
             }
         }
     }
 }
+

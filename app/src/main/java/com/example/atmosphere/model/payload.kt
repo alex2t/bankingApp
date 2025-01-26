@@ -8,8 +8,8 @@ data class LoginPayload(
     val activity: String,
     val customerSessionId: String,
     val permanentUserId: String,
-    val userAgent: String,
-    val remoteAddr: String
+    val userAgent: String? = null,
+    val remoteAddr: String? = null
 )
 @Serializable
 data class AddPayeePayload(
@@ -17,8 +17,8 @@ data class AddPayeePayload(
     val permanentUserId: String,
     val sessionId: String,
     val payeeData: JsonObject,
-    val userAgent: String,
-    val remoteIp: String
+    val userAgent: String? = null,
+    val remoteIp: String? = null
 )
 
 @Serializable
@@ -30,6 +30,6 @@ data class TransactionPayload(
     val payeeCountry: String,
     val amount: Double,
     val transactionType: String,
-    val userAgent: String,
-    val remoteIp: String
+    val userAgent: String? = null,
+    val remoteIp: String? = null
 )

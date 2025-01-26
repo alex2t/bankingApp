@@ -38,6 +38,7 @@ fun CreateAccountScreen(viewModel: AuthViewModel, navController: NavController, 
     val statusMessage by viewModel.statusMessage.collectAsState()
     var isProcessing by rememberSaveable { mutableStateOf(false) }
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()

@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("com.google.firebase.firebase-perf")
+    id("com.google.firebase.crashlytics")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlinx.serialization)
 }
@@ -107,5 +108,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.perf)
+    implementation(libs.firebase.crashlytics)
 
 }

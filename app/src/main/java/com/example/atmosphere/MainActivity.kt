@@ -22,11 +22,17 @@ import kotlinx.coroutines.launch
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
 import com.google.firebase.FirebaseApp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.example.atmosphere.ui.theme.ATMosphereTheme
 import com.example.atmosphere.utils.ApiProvider
+
+import kotlinx.coroutines.delay
+import android.util.Log
+import androidx.compose.ui.platform.LocalLifecycleOwner
+
 
 
 import java.util.UUID
@@ -39,6 +45,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var handler: Handler
     private lateinit var inactivityRunnable: Runnable
 
+
+
     private val inactivityTimeout: Long = 5 * 60 * 1000 // 5 minutes in millisecond
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,14 +57,25 @@ class MainActivity : ComponentActivity() {
         openDatabase(this)
 
         handler = Handler(Looper.getMainLooper())
+        val lifecycleOwner = this
+
         inactivityRunnable = Runnable {
             CoroutineScope(Dispatchers.Main).launch {
-                authViewModel.logout()
-                navController.navigate("home") {
-                    popUpTo(0) // Clear backstack
+                if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                    authViewModel.logout()
+                    delay(100)
+                    navController.navigate("home") {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                    }
+                } else {
+                    Log.e("NavigationError", "Cannot navigate as the lifecycle is not in a valid state.")
                 }
             }
         }
+
+
         // Start observing lifecycle changes
         setupLifecycleObserver()
         //to do create a toggle light or dark theme with saving  option in datastore

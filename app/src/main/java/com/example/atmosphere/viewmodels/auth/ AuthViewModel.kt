@@ -225,7 +225,6 @@ class AuthViewModel(private val databaseHelper: UserDatabaseHelper,
         }
     }
 
-
     // Logout Function
     fun logout() {
         _puid.value = null // Clear PUID on logout
