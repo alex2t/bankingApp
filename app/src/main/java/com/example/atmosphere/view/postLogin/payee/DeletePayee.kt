@@ -51,57 +51,78 @@ fun DeletePayee(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background// Background color for the entire screen
         ) {
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (payees.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No payees available.", style = MaterialTheme.typography.bodyMedium)
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    items(payees) { payee ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Row(
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp)
+            ) {
+                if (isLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (payees.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No payees available.", style = MaterialTheme.typography.bodyMedium)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(payees) { payee ->
+                            Card(
                                 modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                shape = RoundedCornerShape(8.dp)
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("Name: ${payee.name}", style = MaterialTheme.typography.bodyLarge)
-                                    Text("Country: ${payee.country}", style = MaterialTheme.typography.bodySmall)
-                                }
-                                Button(
-                                    onClick = { payeeViewModel.deletePayee(puid, payee) },
-                                    modifier = Modifier.padding(start = 16.dp)
+                                Row(
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("Delete")
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            "Name: ${payee.name}",
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                        Text(
+                                            "Country: ${payee.country}",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                    Button(
+                                        onClick = { payeeViewModel.deletePayee(puid, payee) },
+                                        modifier = Modifier.padding(start = 16.dp)
+                                    ) {
+                                        Text("Delete")
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider()
+                Text(
+                    "Session ID: $sessionId",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+                Text(
+                    "PUID: $puid",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider()
-            Text("Session ID: $sessionId", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
-            Text("PUID: $puid", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 8.dp))
         }
     }
 }

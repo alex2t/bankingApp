@@ -1,5 +1,6 @@
 package com.example.atmosphere
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,7 +32,13 @@ import com.example.atmosphere.utils.ApiProvider
 
 import kotlinx.coroutines.delay
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import android.Manifest
+import androidx.appcompat.app.AppCompatActivity
 
 
 
@@ -49,6 +56,23 @@ class MainActivity : ComponentActivity() {
 
     private val inactivityTimeout: Long = 5 * 60 * 1000 // 5 minutes in millisecond
 
+
+    private val requestPermissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        // Callback for handling the permissions result
+        permissions.entries.forEach { entry ->
+            val permission = entry.key
+            val isGranted = entry.value
+            if (isGranted) {
+                Toast.makeText(this, "$permission granted", Toast.LENGTH_SHORT).show()
+                // You can handle granted permissions here
+            } else {
+                Toast.makeText(this, "$permission denied", Toast.LENGTH_SHORT).show()
+                // Handle denied permissions here
+            }
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
@@ -78,6 +102,7 @@ class MainActivity : ComponentActivity() {
 
         // Start observing lifecycle changes
         setupLifecycleObserver()
+        checkAndRequestPermissions()
         //to do create a toggle light or dark theme with saving  option in datastore
         setContent {
             ATMosphereTheme {
@@ -103,6 +128,21 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    private fun checkAndRequestPermissions() {
+        val requiredPermissions = arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+        val deniedPermissions = requiredPermissions.filter { permission ->
+            ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (deniedPermissions.isNotEmpty()) {
+            // Request permissions using Activity Result API
+            requestPermissionsLauncher.launch(deniedPermissions.toTypedArray())
+        }
+    }
+
 
     private fun resetInactivityTimer() {
         handler.removeCallbacks(inactivityRunnable) // Cancel previous timer

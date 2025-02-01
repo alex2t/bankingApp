@@ -15,6 +15,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.TextStyle
 import com.example.atmosphere.ui.theme.SecondFontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -37,117 +40,160 @@ fun CreateAccountScreen(viewModel: AuthViewModel, navController: NavController, 
 
     val statusMessage by viewModel.statusMessage.collectAsState()
     var isProcessing by rememberSaveable { mutableStateOf(false) }
-
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background// Background color for the entire screen
     ) {
-        // Card centered in the screen
-        Box(
+
+        Column(
             modifier = Modifier
-                .weight(1f) // Centers the card vertically
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Card for form elements
-            Card(
+            // Card centered in the screen
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.9f) // Set the card width to 90% of the screen
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(8.dp), // Add elevation for shadow
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface) // Card background color
+                    .weight(1f) // Centers the card vertically
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
+                // Card for form elements
+                Card(
                     modifier = Modifier
-                        .padding(24.dp), // Inner padding for the card content
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxWidth(0.9f) // Set the card width to 90% of the screen
+                        .padding(16.dp),
+                    elevation = CardDefaults.cardElevation(8.dp), // Add elevation for shadow
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onSecondary) // Card background color
                 ) {
-                    // "Register" Text
-                    Text(
-                        text = "Register",
-                        fontSize = 50.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = SecondFontFamily,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.padding(bottom = 32.dp)
-                    )
-
-                    // Email TextField
-                    TextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email") },
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        singleLine = true
-                    )
-
-                    // Password TextField
-                    TextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        singleLine = true
-                    )
-
-                    // Create Account Button
-                    Button(
-                        onClick = {
-                            focusManager.clearFocus()
-                            if (email.isNotBlank() && password.isNotBlank() && !isProcessing) {
-                                isProcessing = true
-                                viewModel.createAccount(email, password)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = email.isNotBlank() && password.isNotBlank() && !isProcessing
+                            .padding(24.dp), // Inner padding for the card content
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp
+                        // "Register" Text
+                        Text(
+                            text = "Register",
+                            fontSize = 50.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = SecondFontFamily,
+                            color = MaterialTheme.colorScheme.onTertiary,
+                            modifier = Modifier.padding(bottom = 32.dp),
+                            style = TextStyle(
+                                shadow = Shadow(
+                                    color = Color.Black,
+                                    blurRadius = 8f,
+                                    offset = Offset(3f, 3f)
+                                )
                             )
-                        } else {
-                            Text("Create Account")
-                        }
-                    }
+                        )
 
-                    // Status Message
-                    statusMessage?.let { (message, isSuccess) ->
-                        if (message?.isNotBlank() == true) {
-                            Text(
-                                text = message,
-                                color = if (isSuccess) Color.Green else Color.Red,
-                                modifier = Modifier.padding(top = 8.dp)
+                        // Email TextField
+                        TextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = { Text("Email") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedTextColor = MaterialTheme.colorScheme.tertiary, // Text color when focused
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface, // Text color when unfocused
+                                focusedContainerColor = MaterialTheme.colorScheme.onTertiary, // Background when focused
+                                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary, // Background when unfocused
+                                cursorColor = MaterialTheme.colorScheme.primary, // Cursor color
+                                focusedIndicatorColor = MaterialTheme.colorScheme.onSecondary, // Outline color when focused
+
                             )
-                        }
-                    }
+                        )
 
-                    // Navigation to Sign In Screen
-                    TextButton(onClick = { navController.navigate("signIn/$sessionId") }) {
-                        Text("Sign In")
+                        // Password TextField
+                        TextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            label = { Text("Password") },
+                            visualTransformation = PasswordVisualTransformation(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedTextColor = MaterialTheme.colorScheme.tertiary, // Text color when focused
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface, // Text color when unfocused
+                                focusedContainerColor = MaterialTheme.colorScheme.onTertiary, // Background when focused
+                                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary, // Background when unfocused
+                                cursorColor = MaterialTheme.colorScheme.primary, // Cursor color
+                                focusedIndicatorColor = MaterialTheme.colorScheme.onSecondary, // Outline color when focused
+
+                            )
+                        )
+
+                        // Create Account Button
+                        Button(
+                            onClick = {
+                                focusManager.clearFocus()
+                                if (email.isNotBlank() && password.isNotBlank() && !isProcessing) {
+                                    isProcessing = true
+                                    viewModel.createAccount(email, password)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = email.isNotBlank() && password.isNotBlank() && !isProcessing
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Create Account")
+                            }
+                        }
+
+                        // Status Message
+                        statusMessage?.let { (message, isSuccess) ->
+                            if (message?.isNotBlank() == true) {
+                                Text(
+                                    text = message,
+                                    color = if (isSuccess) Color.Green else Color.Red,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                            }
+                        }
+
+                        // Navigation to Sign In Screen
+                        TextButton(
+                            onClick = { navController.navigate("signIn/$sessionId") },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color.White, // Text Color
+                                containerColor = MaterialTheme.colorScheme.primary // Background Color
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth(0.4f) // Takes 30% of screen width (adjustable)
+                                .heightIn(min = 36.dp, max = 48.dp) // Adjusts height dynamically
+                                .wrapContentSize() // Ensures content does not overflow
+                                .padding(horizontal = 8.dp, vertical = 4.dp) //  Keeps spacing responsive
+
+                        )
+                        {
+                            Text("Sign In")
+                        }
                     }
                 }
             }
-        }
 
-        // Session ID at the bottom
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.BottomStart
-        ) {
-            Text(
-                text = "Session ID: $sessionId",
-                modifier = Modifier.padding(16.dp)
-            )
+            // Session ID at the bottom
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Text(
+                    text = "Session ID: $sessionId",
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.onSecondary,
+                )
+            }
         }
     }
 }

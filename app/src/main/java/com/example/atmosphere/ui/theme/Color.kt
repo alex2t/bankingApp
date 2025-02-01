@@ -7,16 +7,19 @@ import androidx.compose.ui.graphics.Color
 //Convert Hex (#RRGGBB) to ARGB (0xAARRGGBB)
 
 //Add 0xFF at the beginning of the hex code for full opacity.
-//Example: #797270 → 0xFF797270.
+//Example: #797270 → 0xFF797270.  Color(0xFF75DDDD)
 
 // Light Theme Colors
-val PrimaryLight = Color(0xFF5748B5)
-val SecondaryLight = Color(0xFFE3D26F)
-val TertiaryLight = Color(0xFF75DDDD)
-val BackgroundLight = Color(0xFFF1F2ED)
-val AccentLight = Color(0xFF231486)
+val PrimaryLight = Color(0xFF4682B4)
+val SecondaryLight = Color(0xFF96cd33)
+val Tertiary = Color(0xFF2E2E2E)
+val Background = Color(0xFF231486)
 val TabInactiveLight = Color(0xFF524C75)
-val onPrimary = Color(0xFFBFB304)
+val onPrimary = Color(0xFFF1F2ED)
+val onSecondary= Color( 0xFFecb636)
+val onTertiary=Color(0xFFd5c9c5)
+val onSurface= Color(0xFF1523dc)
+
 
 
 val PrimaryDark = Color(0xFF5748B5)

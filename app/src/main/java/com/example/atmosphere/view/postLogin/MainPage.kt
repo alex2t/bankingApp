@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -13,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.atmosphere.model.TransactionWithPayee
@@ -32,6 +34,7 @@ fun MainPage(
     puid: String,
     viewModel: TransactionViewModel,
     authViewModel: AuthViewModel,
+
 ) {
     var transactions by remember { mutableStateOf<List<TransactionWithPayee>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
@@ -61,6 +64,7 @@ fun MainPage(
             )
         },
         content = { paddingValues ->
+
             Box(
                 modifier = Modifier
                     .padding(paddingValues)
@@ -120,14 +124,23 @@ fun MainPage(
                             .padding(16.dp),
                         horizontalAlignment = Alignment.Start
                     ) {
-                        Text(text = "Session ID: $sessionId")
-                        Text(text = "PUID: $puid")
+                        Text(
+                            text = "Session ID: $sessionId",
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            style = MaterialTheme.typography.bodySmall,
+                            )
+                        Text(
+                            text = "PUID: $puid",
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            style = MaterialTheme.typography.bodySmall,
+                            )
                     }
                 }
             }
         },
         sessionId = sessionId,
         puid = puid,
-        authViewModel = authViewModel
+        authViewModel = authViewModel,
+
     )
 }

@@ -32,13 +32,13 @@ fun AddOrDeletePayeePage(
 
         TabRow(
             selectedTabIndex = selectedTab,
-            modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary),
+           // modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary), // non selected option
             indicator = { tabPositions ->
                 TabRowDefaults.SecondaryIndicator(
                     modifier = Modifier
                         .tabIndicatorOffset(tabPositions[selectedTab])
                         .height(4.dp),
-                    color = MaterialTheme.colorScheme.tertiary
+                    color = MaterialTheme.colorScheme. onSecondary // bottom line
                 )
             }
         ) {
@@ -47,12 +47,12 @@ fun AddOrDeletePayeePage(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
                     modifier = Modifier
-                        .background(if (selectedTab == index) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onPrimary)
+                        .background(if (selectedTab == index) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurface)
                         .padding(8.dp),
                     text = {
                         Text(
                             text = title,
-                            color = if (selectedTab == index) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurface,
+                            color = if (selectedTab == index) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

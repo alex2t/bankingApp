@@ -46,21 +46,17 @@ fun TransactionItem(
         .pointerInput(Unit) {
             detectHorizontalDragGestures(
                 onDragEnd = {
-                    Log.d("TransactionItem", "TransactionTem before if: $transaction")
                     if (offsetX < -swipeThreshold) {
-                        Log.d("TransactionItem", "TransactionItem: ${transaction}")
                         onTransactionDeleted(transaction)
                     }
                     offsetX = 0f // Reset offset
                 },
                 onHorizontalDrag = { _, dragAmount ->
                     offsetX += dragAmount
-                    Log.d("TransactionItem", "offsetX: $offsetX")
                 }
             )
         }
         .clickable {
-            Log.d("TransactionItem", "clickable")
             onTransactionSelected(transaction)
         }
 
@@ -69,7 +65,7 @@ fun TransactionItem(
         modifier = modifier,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
     ) {
         Row(
             modifier = Modifier

@@ -11,6 +11,9 @@ import com.example.atmosphere.ui.theme.SecondFontFamily
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -38,105 +41,137 @@ fun SignInScreen(viewModel: AuthViewModel, navController: NavController, session
             }
         }
     }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background// Background color for the entire screen
     ) {
-        Box(
+
+        Column(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Card-like appearance for the content
-            Card(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(8.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
+                // Card-like appearance for the content
+                Card(
                     modifier = Modifier
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxWidth(0.9f)
+                        .padding(16.dp),
+                    elevation = CardDefaults.cardElevation(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onSecondary)
                 ) {
-                    Text(
-                        text = "Log in",
-                        fontSize = 50.sp,
-                        fontFamily = SecondFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.padding(bottom = 32.dp)
-                    )
-
-                    TextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email") },
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        singleLine = true
-                    )
-
-                    TextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        singleLine = true
-                    )
-
-                    Button(
-                        onClick = {
-                            focusManager.clearFocus()
-                            if (email.isNotBlank() && password.isNotBlank()) {
-                                viewModel.signIn(email, password, sessionId)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = email.isNotBlank() && password.isNotBlank()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp
+                        Text(
+                            text = "Log in",
+                            fontSize = 50.sp,
+                            fontFamily = SecondFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiary,
+                            modifier = Modifier.padding(bottom = 32.dp),
+                            style = TextStyle(
+                                shadow = Shadow(
+                                    color = Color.Black,
+                                    blurRadius = 20f,
+                                    offset = Offset(16f, 16f)
+                                )
                             )
-                        } else {
-                            Text("Sign In")
-                        }
-                    }
+                        )
 
-                    statusMessage?.let { (message, isSuccess) ->
-                        if (message?.isNotBlank() == true) {
-                            Text(
-                                text = message,
-                                color = if (isSuccess) Color.Green else Color.Red,
-                                modifier = Modifier.padding(top = 8.dp)
+
+                        TextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = { Text("Email") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedTextColor = MaterialTheme.colorScheme.tertiary, // Text color when focused
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface, // Text color when unfocused
+                                focusedContainerColor = MaterialTheme.colorScheme.onTertiary, // Background when focused
+                                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary, // Background when unfocused
+                                cursorColor = MaterialTheme.colorScheme.primary, // Cursor color
+                                focusedIndicatorColor = MaterialTheme.colorScheme.onSecondary, // Outline color when focused
+
                             )
+                        )
+
+                        TextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            label = { Text("Password") },
+                            visualTransformation = PasswordVisualTransformation(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedTextColor = MaterialTheme.colorScheme.tertiary, // Text color when focused
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface, // Text color when unfocused
+                                focusedContainerColor = MaterialTheme.colorScheme.onTertiary, // Background when focused
+                                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary, // Background when unfocused
+                                cursorColor = MaterialTheme.colorScheme.primary, // Cursor color
+                                focusedIndicatorColor = MaterialTheme.colorScheme.onSecondary, // Outline color when focused
+
+                            )
+                        )
+
+                        Button(
+                            onClick = {
+                                focusManager.clearFocus()
+                                if (email.isNotBlank() && password.isNotBlank()) {
+                                    viewModel.signIn(email, password, sessionId)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = email.isNotBlank() && password.isNotBlank()
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Sign In")
+                            }
+                        }
+
+                        statusMessage?.let { (message, isSuccess) ->
+                            if (message?.isNotBlank() == true) {
+                                Text(
+                                    text = message,
+                                    color = if (isSuccess) Color.Green else Color.Red,
+                                    modifier = Modifier.padding(top = 8.dp),
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        // Session ID at the bottom
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(),
-            contentAlignment = Alignment.BottomStart // Align to the bottom start
-        ) {
-            Text(
-                text = "Session ID: $sessionId",
-                modifier = Modifier.padding(16.dp)
-            )
+            // Session ID at the bottom
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.BottomStart // Align to the bottom start
+            ) {
+                Text(
+                    text = "Session ID: $sessionId",
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.onSecondary,
+                )
+            }
         }
     }
 }

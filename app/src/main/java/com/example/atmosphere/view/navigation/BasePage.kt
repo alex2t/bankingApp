@@ -34,7 +34,8 @@ fun BasePage(
     sessionId: String?,
     puid: String?,
     authViewModel: AuthViewModel,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
@@ -46,74 +47,81 @@ fun BasePage(
         }
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .padding(16.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
+
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
-                    drawerContent()
-                }
-            }
-        },
-        content = {
-            Scaffold(
-                topBar = {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.primary)
-                            .padding(8.dp)
-                        ,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        IconButton(onClick = {
-                            coroutineScope.launch {
-                                drawerState.open()
-                            }
-                        }) {
-                            Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color.White)
-                        }
-                        Text(
-                            text = pageTitle,
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        drawerContent()
                     }
-                },
-                bottomBar = {
-                    BottomAppBar(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        content = {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "ATM_OSPHERE",
-                                    color = Color.White,
-                                    style = MaterialTheme.typography.titleLarge
+                }
+            },
+            content = {
+                Scaffold(
+                    topBar = {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.primary)
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(onClick = {
+                                coroutineScope.launch {
+                                    drawerState.open()
+                                }
+                            }) {
+                                Icon(
+                                    Icons.Filled.Menu,
+                                    contentDescription = "Menu",
+                                    tint = Color.White
                                 )
                             }
+                            Text(
+                                text = pageTitle,
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleLarge
+                            )
                         }
-                    )
-                },
-                snackbarHost = { SnackbarHost(snackbarHostState) },
-                content = content
-            )
-        }
-    )
+                    },
+                    bottomBar = {
+                        BottomAppBar(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            content = {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "ATM_OSPHERE",
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.titleLarge
+
+                                    )
+                                }
+                            }
+                        )
+                    },
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
+                    content = content
+                )
+
+            }
+        )
+
 }
 
 

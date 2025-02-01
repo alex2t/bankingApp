@@ -9,64 +9,40 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-//
-//private val DarkColorScheme = darkColorScheme(
-//    primary = PrimaryDark,
-//    secondary = SecondaryDark,
-//    tertiary = TertiaryDark,
-//    background = BackgroundDark,
-//    surface = AccentDark,
-//    onSurface = TabInactiveDark,
-//    onBackground = NeutralGrey,
-//    onPrimary = onPrimary
-//
-//)
+
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryLight,
     secondary = SecondaryLight,
-    tertiary = TertiaryLight,
-    background = BackgroundLight,
-    surface = AccentLight,
-    onSurface = TabInactiveLight,
-    onBackground = NeutralGrey
+    tertiary = Tertiary,
+    background = Background,
+    onSurface = onSurface,
+    onBackground = NeutralGrey,
+    onPrimary = onPrimary,
+    onSecondary = onSecondary,
+    onTertiary = onTertiary
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryLight,
     secondary = SecondaryLight,
-    tertiary = TertiaryLight,
-    background = BackgroundLight,
-    surface = AccentLight,
+    tertiary = Tertiary,
+    background = Background,
     onSurface = TabInactiveLight,
-    onBackground = NeutralGrey
+    onBackground = NeutralGrey,
+    onPrimary = onPrimary,
+    onSecondary = onSecondary,
+    onTertiary = onTertiary
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
 )
 
 @Composable
 fun ATMosphereTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = false, // Disable system-based dark mode entirely
+    dynamicColor: Boolean = false, // Disable dynamic colors for consistency
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    // Force the use of LightColorScheme
+    val colorScheme = LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
@@ -74,3 +50,31 @@ fun ATMosphereTheme(
         content = content
     )
 }
+
+
+
+//@Composable
+//fun ATMosphereTheme(
+//    darkTheme: Boolean = isSystemInDarkTheme(),
+//    // Dynamic color is available on Android 12+
+//    dynamicColor: Boolean = true,
+//    content: @Composable () -> Unit
+//) {
+//    val colorScheme = when {
+//        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+//            val context = LocalContext.current
+//            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+//        }
+//
+////        darkTheme -> DarkColorScheme
+////        else -> LightColorScheme
+//        darkTheme -> LightColorScheme
+//        else -> LightColorScheme
+//    }
+//
+//    MaterialTheme(
+//        colorScheme = colorScheme,
+//        typography = Typography,
+//        content = content
+//    )
+//}
