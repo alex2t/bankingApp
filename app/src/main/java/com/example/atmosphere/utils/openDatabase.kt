@@ -4,13 +4,12 @@ import android.content.Context
 import android.util.Log
 import com.example.atmosphere.utils.database.AppDatabaseHelper
 
-
+//for debuggin purpose
 fun openDatabase(context: Context) {
     val dbHelper = AppDatabaseHelper(context)
     val db = dbHelper.writableDb // Open the encrypted database
     Log.d("DatabaseInspector", "Database is now open.")
 
-    // Access each table to ensure they are open in Database Inspector
     try {
         db.rawQuery("SELECT * FROM users LIMIT 1", null).use {
             Log.d("DatabaseInspector", "Accessed 'users' table.")

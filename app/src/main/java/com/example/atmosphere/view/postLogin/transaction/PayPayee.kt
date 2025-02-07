@@ -22,7 +22,10 @@ import com.example.atmosphere.model.Transaction
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Icon
@@ -88,8 +91,11 @@ fun PayPayee(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center // ✅ Centers the content inside Box
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState()) // Enables vertical scrolling
+                    .horizontalScroll(rememberScrollState()),
+                        contentAlignment = Alignment.Center
+
 
             ) {
                 Column(
